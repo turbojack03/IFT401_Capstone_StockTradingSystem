@@ -117,3 +117,33 @@ button.btn-primary:hover {
   vertical-align: middle; /* align with text */
 }
   
+
+
+
+
+
+
+
+
+
+
+/* ===== Bamboo stalks ===== */
+.bamboo {
+    position: fixed;
+    bottom: -10px;
+    width: auto;
+    height: 30vh;
+    max-height: 250px;
+    z-index: 50;
+    transition: transform 0.2s ease-out;
+    pointer-events: none; /* Make them non-interactive */
+}
+
+.left-bamboo {
+    left: 10px;
+}
+
+.right-bamboo {
+    right: 10px;
+    transform: scaleX(-1);
+}

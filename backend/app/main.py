@@ -45,14 +45,15 @@ def portfolio():
 def profile():
     return render_template("profile.html")
 
+@app.route("/questionmarkquestionmarkquestionmark")
+def questionmarkquestionmarkquestionmark():
+    return render_template("questionmarkquestionmarkquestionmark.html")
 
 @app.route("/accounthistory")
 def accounthistory():
     return render_template("accounthistory.html")
 
-@app.route("/questionmarkquestionmarkquestionmark")
-def questionmarkquestionmarkquestionmark():
-    return render_template("questionmarkquestionmarkquestionmark.html")
+
 
 
 
