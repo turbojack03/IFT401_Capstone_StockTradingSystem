@@ -44,7 +44,7 @@ def portfolio():
 @app.route("/profile")
 def profile():
     return render_template("profile.html")
-<<<<<<< Updated upstream
+
 
 @app.route("/questionmarkquestionmarkquestionmark")
 def questionmarkquestionmarkquestionmark():
@@ -53,13 +53,16 @@ def questionmarkquestionmarkquestionmark():
 @app.route("/accounthistory")
 def accounthistory():
     return render_template("accounthistory.html")
-=======
->>>>>>> Stashed changes
+
 
 @app.route("/questionmarkquestionmarkquestionmark")
 def questionmarkquestionmarkquestionmark():
     return render_template("questionmarkquestionmarkquestionmark.html")
 
+
+@app.route("/questionmarkquestionmarkquestionmark")
+def questionmarkquestionmarkquestionmark():
+    return render_template("questionmarkquestionmarkquestionmark.html")
 
 
 
