@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-  <title>{% block title %}{% endblock %} - Palmtree</title>
+  <title>{% block title %}{% endblock %} - Bamboo StockSim</title>
 
 
 </head>
@@ -14,12 +14,18 @@
 <body>
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
-      <a class="navbar-brand" href="{{ url_for('base') }}">Palm Tree StockSim</a>
 
-      <img src="{{ url_for('static', filename='palmtree.png') }}" alt="Palm Tree"
-        style="height:30px; width:auto; margin-right:10px;">
 
-      </a>
+
+      <a class="navbar-brand" href="{{ url_for('base') }}">Bamboo StockSim</a>
+
+        <img src="{{ url_for('static', filename='bamboo2.png') }}" alt="Bamboo2" 
+
+
+           style="height:30px; width:auto; margin-right:10px;">
+          
+  </a>
+
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -46,9 +52,14 @@
 
 
 
-  {% block content %}
-  <div class="container mt-4">
-    <h1>Welcome to Palm Tree StockSim!</h1>
+    {% block content %}
+    <div class="container mt-4">
+
+    <h1>Welcome to Bamboo StockSim!</h1>
+    <p>Your ultimate stock market simulation experience.</p>
+
+
+    
 
     {% endblock %}
   </div>
@@ -58,14 +69,25 @@
 
 
 
-  <footer class="bg-dark text-light mt-5">
-    <div class="container py-3">
-      <p class="text-center mb-0">© 2024 Epic Stock Sim App</p>
-    </div>
-  </footer>
+  
+<footer class="bg-dark text-light mt-5">
+  <img src="{{ url_for('static', filename='bamboo.png') }}" 
+       alt="Bamboo stalk" 
+       class="bamboo left-bamboo">
+
+  <div class="container py-3">
+    <p class="text-center mb-0">© 2024 Epic Stock Sim App</p>
+  </div>
+
+  <img src="{{ url_for('static', filename='bamboo.png') }}" 
+       alt="Bamboo stalk" 
+       class="bamboo right-bamboo">
+</footer>
+
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="{{ url_for('static', filename='script.js') }}"></script>
+
 </body>
 
 </html>

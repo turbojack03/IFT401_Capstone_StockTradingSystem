@@ -111,9 +111,39 @@ button.btn-primary:hover {
 
 /* ===== Tables ===== */
 /* Reminder2self: SWITCH TO BAMBOO LOGO AND NAME BECAUSE BAMBOO GROWS FAST LIKE STOCKS!!!! BIG BRAIN MOMENT */
-/* ===== Palm Tree logo ===== */
+/* ===== Bamboo2 logo ===== */
 .navbar-brand img {
   border-radius: 12px;  /* rounded corners */
   vertical-align: middle; /* align with text */
 }
   
+
+
+
+
+
+
+
+
+
+
+/* ===== Bamboo stalks ===== */
+.bamboo {
+    position: fixed;
+    bottom: -10px;
+    width: auto;
+    height: 30vh;
+    max-height: 250px;
+    z-index: 50;
+    transition: transform 0.2s ease-out;
+    pointer-events: none; /* Make them non-interactive */
+}
+
+.left-bamboo {
+    left: 10px;
+}
+
+.right-bamboo {
+    right: 10px;
+    transform: scaleX(-1);
+}

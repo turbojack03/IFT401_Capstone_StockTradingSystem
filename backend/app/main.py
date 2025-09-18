@@ -46,13 +46,17 @@ def profile():
     return render_template("profile.html")
 
 
+
 @app.route("/accounthistory")
 def accounthistory():
     return render_template("accounthistory.html")
 
+
 @app.route("/settings")
 def settings():
     return render_template("settings.html")
+
+
 
 @app.route("/questionmarkquestionmarkquestionmark")
 def questionmarkquestionmarkquestionmark():
