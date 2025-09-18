@@ -41,7 +41,14 @@ def dashboard():
 def portfolio():
     return render_template("portfolio.html")
 
+@app.route("/accounthistory")
+def accounthistory():
+    return render_template("accounthistory.html")
 
+
+@app.route("/settings")
+def settings():
+    return render_template("settings.html")
 if __name__ == "__main__":
     app.run(debug=True)
 

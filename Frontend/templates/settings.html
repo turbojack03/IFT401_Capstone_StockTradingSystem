@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}settings{% endblock %}
+{% block content %}
+
+
+  <h1>Settings</h1>
+  <p>This is where Settings details will go.</p>
+
+
+
+
+
+
+<button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#exampleModal">
+  Log Out
+</button>
+
+
+<button type="button" class="btn btn-dark" >
+  Change Password
+</button>
+
+
+<button type="button" class="btn btn-dark" >
+  Change Theme
+</button>
+
+
+<button type="button" class="btn btn-dark" >
+  Timezone
+</button>
+
+
+<button type="button" class="btn btn-dark" >
+  Market Hours
+</button>
+<button type="button" class="btn btn-dark" >
+  Disable Learning Tips
+</button>
+
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Logging Out</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">No</button>
+        <button type="button" class="btn btn-success">Yes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+{% endblock %}
