@@ -6,7 +6,7 @@ from flask_bootstrap import Bootstrap5  # or Bootstrap if that's the version you
 
 # Resolve paths
 APP_DIR = Path(__file__).resolve().parent      # backend/app
-PROJECT_ROOT = APP_DIR.parent.parent           # go up 2 levels to project root
+PROJECT_ROOT = APP_DIR.parent.parent           # go up 2 levels to project root CHANGE NAME TO BAMBOO
 
 TEMPLATES_DIR = PROJECT_ROOT / "Frontend" / "templates"
 STATIC_DIR    = PROJECT_ROOT / "Frontend"
@@ -50,15 +50,17 @@ def profile():
 def accounthistory():
     return render_template("accounthistory.html")
 
+@app.route("/settings")
+def settings():
+    return render_template("settings.html")
+
 @app.route("/questionmarkquestionmarkquestionmark")
 def questionmarkquestionmarkquestionmark():
     return render_template("questionmarkquestionmarkquestionmark.html")
 
 
 
-@app.route("/settings")
-def settings():
-    return render_template("settings.html")
+
 if __name__ == "__main__":
     app.run(debug=True)
 
