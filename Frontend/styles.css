@@ -4,17 +4,24 @@ body {
   display: flex;
   flex-direction: column;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background-color: #f9f9f9;
+  background-color: aquamarine;
   color: #1c1c1e;
   line-height: 1.6;
 }
 
+/* ===== HIDDEN NAVBAR LINKS ===== */
+.navbar .nav-link.hidden {
+  color: #212529;   /* same as navbar background */
+}
 .container {
   flex: 1;
   padding-left: 30px;
   padding-right: 30px;
 }
-
+.head
+er, main, footer {
+ color: #212529
+}
 /* ===== Navbar ===== */
 .navbar {
   border-radius: 0 0 1rem 1rem; /* Curvy bottom corners */
@@ -98,11 +105,13 @@ button.btn-primary:hover {
   box-shadow: 0 8px 20px rgba(0,0,0,0.08);
 }
 
-
+.container.mt-4 {
+  background-color: aquamarine;
+}
 
 /* ===== Tables ===== */
-
-/* ===== Palm Tree ===== */
+/* Reminder2self: SWITCH TO BAMBOO LOGO AND NAME BECAUSE BAMBOO GROWS FAST LIKE STOCKS!!!! BIG BRAIN MOMENT */
+/* ===== Palm Tree logo ===== */
 .navbar-brand img {
   border-radius: 12px;  /* rounded corners */
   vertical-align: middle; /* align with text */

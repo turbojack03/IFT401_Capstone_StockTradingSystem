@@ -13,7 +13,7 @@
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
       <a class="navbar-brand" href="{{ url_for('base') }}">Palm Tree StockSim</a>
-      
+
         <img src="{{ url_for('static', filename='palmtree.png') }}" alt="Palm Tree" 
            style="height:30px; width:auto; margin-right:10px;">
           
@@ -27,10 +27,8 @@
           <li class="nav-item"><a class="nav-link" href="{{ url_for('login') }}">Login</a></li>
           <li class="nav-item"><a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a></li>
           <li class="nav-item"><a class="nav-link" href="{{ url_for('portfolio') }}">Portfolio</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ url_for('accounthistory') }}">Account History</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ url_for('settings') }}">Settings</a></li>
-
-
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('profile') }}">Profile</a></li>
+          <li class="nav-item"><a class="nav-link hidden" href="{{ url_for('questionmarkquestionmarkquestionmark') }}">???</a></li>
 
         </ul>
       </div>
@@ -39,9 +37,13 @@
     
   </nav>
 
-  
-  <div class="container mt-4">
-    {% block content %}{% endblock %}
+ 
+
+    {% block content %}
+    <div class="container mt-4">
+    <h1>Welcome to Palm Tree StockSim!</h1>
+    
+    {% endblock %}
   </div>
 
 

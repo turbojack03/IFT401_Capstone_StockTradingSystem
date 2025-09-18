@@ -40,10 +40,20 @@ def dashboard():
 @app.route("/portfolio")
 def portfolio():
     return render_template("portfolio.html")
+    
+@app.route("/profile")
+def profile():
+    return render_template("profile.html")
+
 
 @app.route("/accounthistory")
 def accounthistory():
     return render_template("accounthistory.html")
+
+@app.route("/questionmarkquestionmarkquestionmark")
+def questionmarkquestionmarkquestionmark():
+    return render_template("questionmarkquestionmarkquestionmark.html")
+
 
 
 @app.route("/settings")
