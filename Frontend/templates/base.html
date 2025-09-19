@@ -34,11 +34,20 @@
           <li class="nav-item"><a class="nav-link" href="{{ url_for('base') }}">Base</a></li>
           <li class="nav-item"><a class="nav-link" href="{{ url_for('login') }}">Login</a></li>
           <li class="nav-item"><a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ url_for('portfolio') }}">Portfolio</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ url_for('profile') }}">Profile</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ url_for('accounthistory') }}">Account History</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ url_for('settings') }}">Settings</a></li>
 
+          <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" 
+          data-bs-toggle="dropdown" aria-expanded="false">
+          Profile
+          </a>
+  <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+    
+    <li><a class="dropdown-item" href="{{ url_for('profile') }}">View Profile</a></li>
+    <li><a class="dropdown-item" href="{{ url_for('settings') }}">Settings</a></li>
+    <li><a class="dropdown-item" href="{{ url_for('portfolio') }}">Portfolio</a></li>
+  </ul>
+</li>
+          
 
           <li class="nav-item"><a class="nav-link hidden"
               href="{{ url_for('questionmarkquestionmarkquestionmark') }}">???</a></li>

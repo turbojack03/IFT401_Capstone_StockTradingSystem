@@ -129,21 +129,46 @@ button.btn-primary:hover {
 
 /* ===== Bamboo stalks ===== */
 .bamboo {
-    position: fixed;
-    bottom: -10px;
+    position: fixed;       /* lock to viewport */
+    bottom: 0;             /* always bottom edge */
     width: auto;
     height: 30vh;
     max-height: 250px;
     z-index: 50;
-    transition: transform 0.2s ease-out;
-    pointer-events: none; /* Make them non-interactive */
+    pointer-events: none;  /* so it doesn’t block clicks */
 }
 
 .left-bamboo {
-    left: 10px;
+    left: 10px;            /* left corner */
 }
 
 .right-bamboo {
-    right: 10px;
-    transform: scaleX(-1);
+    right: 10px;           /* right corner */
+    transform: scaleX(-1); /* mirror */
+}
+
+
+
+.signup-link:link {
+  color: green;
+  background-color: transparent;
+  text-decoration: none;
+}
+
+.signup-link:visited {
+  color: rgb(8, 117, 13);
+  background-color: transparent;
+  text-decoration: none;
+}
+
+.signup-link:hover {
+  color: rgb(14, 168, 22);
+  background-color: transparent;
+  text-decoration: underline;
+}
+
+.signup-link:active {
+  color: rgb(0, 0, 0);
+  background-color: transparent;
+  text-decoration: underline;
 }

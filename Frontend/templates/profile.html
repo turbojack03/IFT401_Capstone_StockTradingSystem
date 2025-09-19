@@ -1,6 +1,80 @@
 {% extends "base.html" %}
 {% block title %}profile{% endblock %}
 {% block content %}
+<!--
+<div class="alert alert-primary" role="alert">
+  A simple primary alert—check it out!
+</div>
+<div class="alert alert-secondary" role="alert">
+  A simple secondary alert—check it out!
+</div>
+<div class="alert alert-success" role="alert">
+  A simple success alert—check it out!
+</div>
+<div class="alert alert-danger" role="alert">
+  A simple danger alert—check it out!
+</div>
+<div class="alert alert-warning" role="alert">
+  A simple warning alert—check it out!
+</div>
+<div class="alert alert-info" role="alert">
+  A simple info alert—check it out!
+</div>
+<div class="alert alert-light" role="alert">
+  A simple light alert—check it out!
+</div>
+<div class="alert alert-dark" role="alert">
+  A simple dark alert—check it out!
+</div>
+-->
+
+
+
+    <h1>Profile</h1>
+    <p>This is where profile details will go.</p>
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Profile</title>
+
+  <link href="styles.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-12 col-md-8 col-lg-6">
+        <div class="card shadow-sm">
+          <div class="card-body text-center">
+            <img src="https://placehold.co/96x96" alt="Avatar" class="rounded-circle avatar mb-3">
+            <h4 class="mb-0">Your Name</h4>
+            <p class="text-muted">@username</p>
+
+            <p class="small text-muted mb-3">Short bio or tagline goes here.</p>
+
+            <div class="d-grid gap-2 d-sm-flex justify-content-sm-center mb-3">
+              <a href="#" class="btn btn-primary btn-sm">Edit Profile</a>
+              <a href="/settings" class="btn btn-outline-secondary btn-sm" >Settings</a>
+            </div>
+
+            <hr>
+
+            <ul class="list-group list-group-flush text-start">
+              <li class="list-group-item"><strong>Email:</strong> you@example.com</li>
+              <li class="list-group-item"><strong>Joined:</strong> Jan 1, 2025</li>
+              <li class="list-group-item"><strong>Location:</strong> Phoenix, AZ</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
 
 
 

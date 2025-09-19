@@ -56,7 +56,9 @@ def accounthistory():
 def settings():
     return render_template("settings.html")
 
-
+@app.route("/signup")
+def signup():
+    return render_template("signup.html")
 
 @app.route("/questionmarkquestionmarkquestionmark")
 def questionmarkquestionmarkquestionmark():
