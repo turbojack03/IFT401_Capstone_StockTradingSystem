@@ -8,20 +8,23 @@ body {
   color: #1c1c1e;
   line-height: 1.6;
 }
+html, body { height: 100%; }
 
 /* ===== HIDDEN NAVBAR LINKS ===== */
 .navbar .nav-link.hidden {
   color: #212529;   /* same as navbar background */
+  
 }
-.container {
-  flex: 1;
+
+
+main {
+  flex: 1;  /* pushes footer down */
   padding-left: 30px;
   padding-right: 30px;
 }
-.head
-er, main, footer {
- color: #212529
-}
+
+
+
 /* ===== Navbar ===== */
 .navbar {
   border-radius: 0 0 1rem 1rem; /* Curvy bottom corners */
@@ -30,21 +33,12 @@ er, main, footer {
   padding-top: 1.5rem;
   padding-bottom: 1.5rem;
   font-size: 1.2rem;
+  position: relative; 
 }
 
 /* ===== Footer ===== */
 footer {
   margin-top: auto;
-  border-radius: 1rem 1rem 0 0; /* Curvy top corners */
-  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
-  font-size: 0.9rem;
-  background-color: rgb(33, 250, 33);
-  color: #f5f5f7;
-  padding-top: 1.5rem;
-  padding-bottom: 1.5rem;
-  font-size: 1.1rem;
-
-
 }
 
 /* ===== Headings ===== */
@@ -212,7 +206,7 @@ button.btn-primary:hover {
 }
 
 
-
+/* ===== Buy/Sell Buttons ===== */
 .buttonbuy {
   background-color: #28a745; /* Green */
   border: none;
