@@ -3,7 +3,7 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Comic Sans MS";
   background-color: aquamarine;
   color: #1c1c1e;
   line-height: 1.6;
@@ -56,7 +56,7 @@ h1, h2, h3, h4, h5 {
 
 /* ===== Forms ===== */
 form {
-  background: linear-gradient(#839fec, #ffffff); ;
+  background: linear-gradient(#53f768, #15b830); ;
   padding: 2rem;
   border-radius: 1rem;
   box-shadow: 0 24px 24px rgba(0,0,0,0.06);
@@ -171,4 +171,80 @@ button.btn-primary:hover {
   color: rgb(0, 0, 0);
   background-color: transparent;
   text-decoration: underline;
+}
+
+
+
+
+
+
+
+
+
+/* ==== Styles for signup ===== */
+.form-control {
+  font-size: 1.1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid #d2d2d7;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-label {
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.valid-feedback {
+  font-size: 0.9rem;
+  color: #28a745; /* Bootstrap green */
+}
+
+.invalid-feedback {
+  font-size: 0.9rem;
+  color: #dc3545; /* Bootstrap red */
+}
+
+.form-check-input {
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-right: 0.5rem;
+}
+
+
+
+.buttonbuy {
+  background-color: #28a745; /* Green */
+  border: none;
+  margin-left: 30px;
+  padding-bottom:50px;
+  text-align:center;
+  font-size: 25px;
+  line-height: 50px;
+  font-family:"Comic Sans MS";
+  
+}
+.buttonbuy:hover {
+  background-color: #218838; /* Darker green */
+}
+.buttonbuy:active {
+  background-color: #1e7e34; /* Even darker green */
+}
+.buttonsell {
+  background-color: #dc3545; /* Red */
+  border: none;
+  margin-right: 30px;
+  padding-bottom: 50px;
+  text-align:center;
+  font-size: 25px;
+  line-height: 50px;
+  font-family:"Comic Sans MS";
+  
+
+}
+.buttonsell:hover {
+  background-color: #c82333; /* Darker red */
+}
+.buttonsell:active {
+  background-color: #bd2130; /* Even darker red */
 }

@@ -2,65 +2,219 @@
 {% block title %}dashboard{% endblock %}
 {% block content %}
 
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 <table width="100%" cellspacing="0" cellpadding="8" border="0">
   <tr valign="top">
-    <!-- LEFT COLUMN CHART AND STOCK TILES-->
-    <td width="70%">
 
-      <!-- chart panel -->
+    <!-- LEFT COLUMN (Sidebar with dropdown + stock list) -->
+    <td width="20%" style="background-color:#2d6a4f; color:white; vertical-align:top;">
+      <h4>Stocks</h4>
+
+      <!-- Dropdown -->
+      <div class="dropdown mb-3">
+        <button class="btn btn-light dropdown-toggle w-100" type="button" id="stockCategory" data-bs-toggle="dropdown"
+          aria-expanded="false">
+          Choose <S></S>tock
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="stockCategory">
+          <li><a class="dropdown-item" href="#" onclick="loadStocks('tech')">Tech Stocks</a></li>
+          <li><a class="dropdown-item" href="#" onclick="loadStocks('energy')">Energy Stocks</a></li>
+          <li><a class="dropdown-item" href="#" onclick="loadStocks('indexes')">Indexes</a></li>
+        </ul>
+      </div>
+
+      <!-- Stock list -->
+      <div id="stockList">
+        <!-- Stocks will load here -->
+      </div>
+    </td>
+
+    <!-- MIDDLE COLUMN (Chart + Breadcrumb + Stock Tiles) -->
+    <td width="50%">
       <div class="container">
-        <!-- Content here -->
-        </div>
+        <h3>Main Chart Area</h3>
+        <!-- Insert your chart.js canvas here -->
+        <canvas id="myChart" height="120"></canvas>
+      </div>
 
-      <!--  stock tiles  -->
-  <table class="table">
-  <thead>
-    <tr>
-      <th scope="col">#</th>
-      <th scope="col">First</th>
-      <th scope="col">Last</th>
-      <th scope="col">Handle</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th scope="row">1</th>
-      <td>Mark</td>
-      <td>Otto</td>
-      <td>@mdo</td>
-    </tr>
-    <tr>
-      <th scope="row">2</th>
-      <td>Jacob</td>
-      <td>Thornton</td>
-      <td>@fat</td>
-    </tr>
-    <tr>
-      <th scope="row">3</th>
-      <td>John</td>
-      <td>Doe</td>
-      <td>@social</td>
-    </tr>
-  </tbody>
-</table>
+      <!-- Breadcrumb -->
+      <nav aria-label="breadcrumb" class="mt-3">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="#">Home</a></li>
+          <li class="breadcrumb-item"><a href="#">1min</a></li>
+          <li class="breadcrumb-item"><a href="#">1h</a></li>
+          <li class="breadcrumb-item"><a href="#">1d</a></li>
+          <li class="breadcrumb-item"><a href="#">1m</a></li>
+          <li class="breadcrumb-item"><a href="#">1y</a></li>
+        </ol>
+      </nav>
 
-    <!-- RIGHT COLUMN -->
-    <td width="30%">
-      <table width="100%" border="0" cellspacing="0" cellpadding="8">
-      </h1>align="center"><h1>Palm Tree StockSim<h1>
-        
-
-        <!-- td means data cell -->
-        <!-- tr means row -->
-        <!-- Stacked buttons (no CSS) -->
-        <button type="button" class="btn">Market</button>
-        <button type="button" class="btn">Buy</button>
-        <button type="button" class="btn">Sell</button>
-        <button type="button" class="btn">Account</button>
-        <button type="button" class="btn">Settings</button>
+      <!-- Stock Tiles -->
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th scope="col">Symbol</th>
+            <th scope="col">Name</th>
+            <th scope="col">Price</th>
+            <th scope="col">%change</th>
+            <th scope="col">Volume</th>
+            <th scope="col">Market Cap</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">1</th>
+            <td>Mark</td>
+            <td>Otto</td>
+            <td>@mdo</td>
+            <td>Mark</td>
+            <td>Mark</td>
+            <td>Mark</td>
+          </tr>
+          <tr>
+            <th scope="row">2</th>
+            <td>Jacob</td>
+            <td>Thornton</td>
+            <td>@fat</td>
+          </tr>
+          <tr>
+            <th scope="row">3</th>
+            <td>John</td>
+            <td>Doe</td>
+            <td>@social</td>
+          </tr>
+        </tbody>
       </table>
     </td>
-  </tr>
-</table>
 
-{% endblock %}
+    <!-- RIGHT COLUMN -->
+
+    <title> Simple Order Ticket</title>
+    <td width="30%" style="background-color:#d8f3dc; vertical-align:top; padding:15px;">
+      <h4>Order Ticket</h4>
+      <form>
+        <div style="text-align:center;">
+          <button type="buttonbuy" class="buttonbuy" style="width: 300px; height:30px">Buy</button>
+          <button type="buttonsell" class="buttonsell" style="width:300px; height:30px"> Sell</button>
+        </div>
+        <div class="mb-3">
+          <label for="stockSymbol" class="form-label">Stock Symbol</label>
+          <input type="text" class="form-control" id="stockSymbol" placeholder="e.g. AAPL">
+        </div>
+        <div class="mb-3">
+          <label for="orderType" class="form-label">Order Type</label>
+          <select class="form-select" id="orderType">
+            <option value="market">Market</option>
+            <option value="limit">Limit</option>
+            <option value="stop">Stop</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="quantity" class="form-label">Quantity</label>
+          <input type="number" class="form-control" id="quantity" min="1" placeholder="e.g. 100">
+        </div>
+        <div class="mb-3">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="" id="checkDefault">
+            <label class="form-check-label" for="checkDefault">
+              
+            </label>
+            <label for="pricestop" class="form-label">Stop-Loss</label>
+            <input type="number" class="form-control" id="price" step="0.01" placeholder="e.g. 150.00">
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="" id="checkDefault">
+            <label class="form-check-label" for="checkDefault">
+              
+            </label>
+            <label for="pricetake" class="form-label">Take-Profit<label>
+            <input type="number" class="form-control" id="price" step="0.01" placeholder="e.g. 150.00">
+          </div>
+
+
+            </label>
+            <label for="pricelimit" class="form-label">Limit Price</label>
+            <input type="number" class="form-control" id="price" step="0.01" placeholder="e.g. 150.00">
+          </div>
+          <button type="submit" class="btn btn-success w-100">Place Order</button>
+      </form>
+    </td>
+  </tr>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <script>
+    // Example stock data
+    const stockData = {
+      tech: ["AAPL - Apple", "MSFT - Microsoft", "GOOGL - Alphabet", "AMZN - Amazon"],
+      energy: ["XOM - ExxonMobil", "CVX - Chevron", "BP - BP Plc"],
+      indexes: ["^GSPC - S&P 500", "^DJI - Dow Jones", "^IXIC - Nasdaq"]
+    };
+
+    // Load stock list into sidebar
+    function loadStocks(category) {
+      const stockList = document.getElementById("stockList");
+      stockList.innerHTML = ""; // clear old list
+      stockData[category].forEach(stock => {
+        const link = document.createElement("a");
+        link.href = "#";
+        link.classList.add("d-block", "mb-2");
+        link.style.color = "white";
+        link.textContent = stock;
+        link.onclick = () => showStock(stock);
+        stockList.appendChild(link);
+      });
+    }
+
+    // Show stock info in middle column
+    function showStock(stock) {
+      alert("You clicked " + stock); // replace with chart update
+    }
+
+    // Load default category
+    loadStocks("tech");
+  </script>
+
+  <!-- -->
+  {% endblock %}
