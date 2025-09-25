@@ -4,6 +4,7 @@ from flask_bootstrap import Bootstrap5  # or Bootstrap if that's the version you
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy.dialects.mysql import SET
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:password@localhost/stock_db'
@@ -11,19 +12,86 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'your-secret-key'
 bootstrap = Bootstrap5(app)
 
-db = SQLAlchemy(app)
+db = SQLAlchemy(app)  #lets u interact with the database
 
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'  
 
+
+
+
+class Accounts(db.Model):  # Accounts model
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, nullable=False)
+    status = db.Column(
+        SET("Banned", "Active", "FlaggedAccount"),
+        nullable=False,
+        default="Active"
+    )
+    
+    cash_balance = db.Column(db.Float, nullable=False)
+    created_at = db.Column(db.DateTime)
+    account_number = db.Column(db.String(20), unique=True, nullable=False)
+
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
+    first_name = db.Column(db.String(100), unique=True, nullable=False)
+    last_name = db.Column(db.String(100), unique=True, nullable=False)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(200), nullable=False)  
+    password = db.Column(db.String(200), nullable=False) 
+    created_at =  db.Column(db.DateTime, )
+    last_login_at = db.Column(db.DateTime, )
 
-with app.app_context():
+class stock_orders(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    account_id = db.Column(db.Integer, primary_key=True)
+    stock_id = db.Column(db.Integer, primary_key=True)
+    buy_or_sell = db.Column(db.String(80),nullable=False)
+    order_type = db.Column(db.String(120),nullable=False)
+    quantity = db.Column(db.String(200), nullable=False)
+    executed_at = db.Column(db.DateTime, nullable=True)
+    status = db.Column(db.String(80),nullable=False)
+    date = db.Column(db.DateTime, nullable=False)
+
+
+class Stocks(db.Model):  # Stock model for stock data
+    id = db.Column(db.Integer, primary_key=True)
+    ticker = db.Column(db.String(4), unique=True, nullable=False)
+    company_name = db.Column(db.String(100), nullable=False)
+    is_active = db.Column(db.Boolean)
+    initial_price = db.Column(db.Float, nullable=False)
+    created_at = db.Column(db.DateTime)
+
+class Market_schdule(db.Model):  # Market schedule model
+    id = db.Column(db.Integer, primary_key=True)
+    market_name = db.Column(db.String(100), nullable=False)
+    open_time = db.Column(db.Time, nullable=False)
+    close_time = db.Column(db.Time, nullable=False)
+    is_holiday = db.Column(db.Boolean)
+
+
+class Price_ticks(db.Model):  # Price ticks model
+    id = db.Column(db.Integer, primary_key=True)
+    stock_id = db.Column(db.Integer,  nullable=False)
+    timestamp = db.Column(db.DateTime)
+    price = db.Column(db.Float, nullable=False)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+with app.app_context(): # Create database tables
     db.create_all()
 
 @login_manager.user_loader
