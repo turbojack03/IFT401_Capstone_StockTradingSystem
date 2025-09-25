@@ -24,7 +24,7 @@ login_manager.login_view = 'login'
 
 class Accounts(db.Model):  # Accounts model
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     status = db.Column(
         SET("Banned", "Active", "FlaggedAccount"),
         nullable=False,
@@ -42,19 +42,19 @@ class User(db.Model, UserMixin):
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False) 
-    created_at =  db.Column(db.DateTime, )
-    last_login_at = db.Column(db.DateTime, )
+    created_at =  db.Column(db.DateTime)
+    last_login_at = db.Column(db.DateTime)
 
 class stock_orders(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    account_id = db.Column(db.Integer, primary_key=True)
-    stock_id = db.Column(db.Integer, primary_key=True)
+    account_id = db.Column(db.Integer, db.ForeignKey('accounts.id'), primary_key=True)
+    stock_id = db.Column(db.Integer, db.ForeignKey('stocks.id'), primary_key=True)
     buy_or_sell = db.Column(db.String(80),nullable=False)
     order_type = db.Column(db.String(120),nullable=False)
     quantity = db.Column(db.String(200), nullable=False)
     executed_at = db.Column(db.DateTime, nullable=True)
     status = db.Column(db.String(80),nullable=False)
-    date = db.Column(db.DateTime, nullable=False)
+    date = db.Column(db.DateTime, db.ForeignKey('market_schedule.market_date'), nullable=False)
 
 
 class Stocks(db.Model):  # Stock model for stock data
@@ -75,7 +75,7 @@ class Market_schdule(db.Model):  # Market schedule model
 
 class Price_ticks(db.Model):  # Price ticks model
     id = db.Column(db.Integer, primary_key=True)
-    stock_id = db.Column(db.Integer,  nullable=False)
+    stock_id = db.Column(db.Integer, db.ForeignKey('stocks.id'),  nullable=False)
     timestamp = db.Column(db.DateTime)
     price = db.Column(db.Float, nullable=False)
 
