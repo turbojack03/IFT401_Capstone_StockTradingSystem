@@ -5,6 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.dialects.mysql import SET
+from sqlalchemy import text
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:password@localhost/stock_db'
@@ -82,6 +83,29 @@ class Price_ticks(db.Model):  # Price ticks model
 
 
 
+with app.app_context():  # <- THIS is crucial
+    view_sql = """
+    CREATE OR REPLACE VIEW user_stock_summary AS
+    SELECT
+        u.id AS user_id,
+        u.username,
+        a.id AS account_id,
+        a.status AS account_status,
+        a.cash_balance,
+        so.id AS order_id,
+        s.ticker AS stock_ticker,
+        so.buy_or_sell,
+        so.quantity,
+        so.status AS order_status,
+        so.executed_at
+    FROM user u
+    JOIN accounts a ON u.id = a.user_id
+    LEFT JOIN stock_orders so ON a.id = so.account_id
+    LEFT JOIN stocks s ON so.stock_id = s.id;
+    """
+    with db.engine.connect() as conn:
+        conn.execute(text(view_sql))
+        conn.commit()
 
 
 
