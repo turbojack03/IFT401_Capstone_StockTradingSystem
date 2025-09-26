@@ -5,7 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.dialects.mysql import SET
-from sqlalchemy import text
+from sqlalchemy import text, func
 from datetime import datetime
 
 app = Flask(__name__)
@@ -158,7 +158,66 @@ def dashboard():
 @app.route("/portfolio")
 @login_required
 def portfolio():
-    return render_template("portfolio.html")
+    account = Accounts.query.filter_by(user_id=current_user.id).first()
+    if not account:
+        flash("No account found for this user.", "warning")
+        return render_template("portfolio.html", portfolio=[])
+
+    orders = (
+        db.session.query(
+            stock_orders.stock_id,
+            func.sum(
+                func.case(
+                    (stock_orders.buy_or_sell == "BUY", stock_orders.quantity),
+                    else_=-stock_orders.quantity
+                )
+            ).label("net_quantity"),
+            func.sum(
+                func.case(
+                    (stock_orders.buy_or_sell == "BUY", stock_orders.quantity * Price_ticks.price),
+                    else_=-stock_orders.quantity * Price_ticks.price
+                )
+            ).label("net_investment")
+        )
+        .join(Price_ticks, Price_ticks.stock_id == stock_orders.stock_id)
+        .filter(stock_orders.account_id == account.id)
+        .group_by(stock_orders.stock_id)
+        .all()
+    )
+
+    portfolio_data = []
+    total_investment = 0
+    total_value = 0
+
+    for stock_id, net_quantity, net_investment in orders:
+        if net_quantity <= 0:
+            continue 
+
+        stock = Stocks.query.get(stock_id)
+        latest_price = (
+            Price_ticks.query.filter_by(stock_id=stock_id)
+            .order_by(Price_ticks.timestamp.desc())
+            .first()
+        )
+        current_price = latest_price.price if latest_price else stock.initial_price
+
+        current_value = net_quantity * current_price
+        profit_loss = current_value - net_investment
+
+        total_investment += net_investment
+        total_value += current_value
+
+        portfolio_data.append({
+            "symbol": stock.ticker,
+            "current_price": current_price,
+            "shares": net_quantity,
+            "investment": net_investment,
+            "profit_loss": profit_loss
+        })
+
+    total_pl = total_value - total_investment
+
+    return render_template("portfolio.html", portfolio=portfolio_data,total_investment=total_investment,total_value=total_value,total_pl=total_pl)
     
 @app.route("/profile")
 @login_required
