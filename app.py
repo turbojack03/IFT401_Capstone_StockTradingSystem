@@ -6,6 +6,7 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.dialects.mysql import SET
 from sqlalchemy import text
+from datetime import datetime
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:password@localhost/stock_db'
@@ -19,9 +20,7 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'  
 
-
-
-
+#tables
 class Accounts(db.Model):  # Accounts model
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -42,8 +41,8 @@ class User(db.Model, UserMixin):
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False) 
-    created_at =  db.Column(db.DateTime)
-    last_login_at = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    last_login_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
 
 class stock_orders(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -55,7 +54,6 @@ class stock_orders(db.Model):
     executed_at = db.Column(db.DateTime, nullable=True)
     status = db.Column(db.String(80),nullable=False)
     date = db.Column(db.DateTime, db.ForeignKey('market_schedule.market_date'), nullable=False)
-
 
 class Stocks(db.Model):  # Stock model for stock data
     id = db.Column(db.Integer, primary_key=True)
@@ -78,42 +76,6 @@ class Price_ticks(db.Model):  # Price ticks model
     stock_id = db.Column(db.Integer, db.ForeignKey('stocks.id'),  nullable=False)
     timestamp = db.Column(db.DateTime)
     price = db.Column(db.Float, nullable=False)
-
-
-
-
-
-with app.app_context():  # <- THIS is crucial
-    view_sql = """
-    CREATE OR REPLACE VIEW user_stock_summary AS
-    SELECT
-        u.id AS user_id,
-        u.username,
-        a.id AS account_id,
-        a.status AS account_status,
-        a.cash_balance,
-        so.id AS order_id,
-        s.ticker AS stock_ticker,
-        so.buy_or_sell,
-        so.quantity,
-        so.status AS order_status,
-        so.executed_at
-    FROM user u
-    JOIN accounts a ON u.id = a.user_id
-    LEFT JOIN stock_orders so ON a.id = so.account_id
-    LEFT JOIN stocks s ON so.stock_id = s.id;
-    """
-    with db.engine.connect() as conn:
-        conn.execute(text(view_sql))
-        conn.commit()
-
-
-
-
-
-
-
-
 
 with app.app_context(): # Create database tables
     db.create_all()
@@ -139,7 +101,10 @@ def login():
 
         user = User.query.filter_by(username=username).first()
         if user and check_password_hash(user.password, password):
+            user.last_login_at = datetime.utcnow()
+            db.session.commit()            
             login_user(user)
+
             flash('Logged in successfully!', 'success')
             next_page = request.args.get('next')
             return redirect(next_page or url_for('dashboard'))
@@ -161,6 +126,8 @@ def register():
         return redirect(url_for('dashboard'))
 
     if request.method == 'POST':
+        first_name = request.form.get('first_name')
+        last_name = request.form.get('last_name')
         username = request.form.get('username')
         email = request.form.get('email')
         password = request.form.get('password')
@@ -174,7 +141,7 @@ def register():
             return redirect(url_for('register'))
 
         hashed_password = generate_password_hash(password)
-        new_user = User(username=username, email=email, password=hashed_password)
+        new_user = User(first_name=first_name, last_name=last_name, username=username, email=email, password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
         flash('Registration successful! Please log in.', 'success')
@@ -213,14 +180,15 @@ def settings():
 def questionmarkquestionmarkquestionmark():
     return render_template("questionmarkquestionmarkquestionmark.html")
 
-
-
+#CRUD routes
 @app.route('/add_user', methods=['POST'])
 @login_required
 def add_user():
+    first_name = request.form.get('first_name')
+    last_name = request.form.get('last_name')
     username = request.form.get('username')
     email = request.form.get('email')
-    if not username or not email:
+    if not last_name or not first_name or not username or not email:
         flash('Both username and email are required!', 'danger')
         return redirect(url_for('dashboard'))
 
@@ -229,7 +197,7 @@ def add_user():
         flash('Username already exists!', 'danger')
         return redirect(url_for('dashboard'))
 
-    new_user = User(username=username, email=email, password=generate_password_hash("default123"))  # default password
+    new_user = User(first_name=first_name, last_name=last_name, username=username, email=email, password=generate_password_hash("default123"))  # default password
     db.session.add(new_user)
     db.session.commit()
     flash(f'User {username} added successfully!', 'success')
@@ -254,12 +222,16 @@ def read_user(user_id):
 @login_required
 def update_user(user_id):
     user = User.query.get_or_404(user_id)
+    first_name = request.form.get('first_name')
+    last_name = request.form.get('last_name')
     username = request.form.get('username')
     email = request.form.get('email')
-    if not username or not email:
+    if not last_name or not first_name or not username or not email:
         flash('Both username and email are required!', 'danger')
         return redirect(url_for('dashboard'))
 
+    user.first_name = first_name
+    user.last_name = last_name
     user.username = username
     user.email = email
     db.session.commit()
