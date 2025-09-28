@@ -1,0 +1,263 @@
+/* ====== Modern Admin Panel Styles (Apple-like) ====== */
+:root{
+  --bg: #f5f7fb;
+  --bg-elev: #ffffff;
+  --text: #0f1115;
+  --muted: #6b7280;
+  --primary: #0a84ff;        /* iOS blue */
+  --primary-600:#0076f3;
+  --primary-700:#0065d0;
+  --accent: #34c759;         /* iOS green */
+  --danger:#ff3b30;
+  --warning:#ffcc00;
+  --border: #e5e7eb;
+  --ring: rgba(10,132,255,.35);
+  --shadow: 0 10px 25px rgba(0,0,0,.06), 0 2px 6px rgba(0,0,0,.06);
+  --radius: 16px;
+  --radius-sm: 12px;
+  --radius-xs: 10px;
+  --gap: 16px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0b0d12;
+    --bg-elev:#11151d;
+    --text:#e8eaf0;
+    --muted:#9aa3b2;
+    --border:#222833;
+    --shadow: 0 10px 25px rgba(0,0,0,.45), 0 2px 6px rgba(0,0,0,.35);
+  }
+}
+
+/* Base layout */
+html, body {
+  height: 100%;
+}
+
+body{
+  margin:0;
+  background:
+    radial-gradient(1200px 600px at 90% -10%, rgba(10,132,255,.06), transparent 60%),
+    radial-gradient(900px 500px at -10% 100%, rgba(52,199,89,.06), transparent 60%),
+    var(--bg);
+  color:var(--text);
+  font-family: -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji",sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height:1.4;
+}
+
+#adminpanel-content{
+  max-width: 1080px;
+  margin: 24px auto 80px;
+  padding: 0 20px;
+}
+
+/* Headings */
+h2{
+  font-size: clamp(1.6rem, 1.2rem + 1.2vw, 2rem);
+  font-weight: 700;
+  letter-spacing: -.01em;
+  margin: 8px 0 20px;
+}
+h3{
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0 0 14px;
+}
+h4, h5{
+  color: var(--muted);
+  font-weight: 600;
+  margin: 14px 0 10px;
+}
+
+/* Cards */
+.card{
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px;
+  margin: 18px 0;
+  backdrop-filter: saturate(130%) blur(6px);
+}
+
+/* Forms */
+form{
+  display: grid;
+  gap: 12px;
+}
+
+label{
+  font-size: .9rem;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="time"],
+textarea,
+select{
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  outline: none;
+  transition: box-shadow .18s ease, border-color .18s ease, transform .03s ease;
+}
+
+input::placeholder, textarea::placeholder{ color: #9aa3b2; }
+
+input:focus,
+textarea:focus,
+select:focus{
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--ring);
+}
+
+/* Grouped fields (hours) */
+.flex-group{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
+  gap: 12px;
+}
+
+/* Checkboxes / radios */
+input[type="checkbox"],
+input[type="radio"]{
+  accent-color: var(--primary);
+  width: 16px; height: 16px;
+  vertical-align: middle;
+  transform: translateY(-1px);
+}
+
+/* Buttons */
+button,
+.update-rate-btn,
+#toggle-market-btn{
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: var(--radius-xs);
+  border: 1px solid transparent;
+  background: linear-gradient(180deg, var(--primary) 0%, var(--primary-600) 100%);
+  color:#fff;
+  font-weight: 600;
+  letter-spacing: .01em;
+  cursor: pointer;
+  transition: transform .06s ease, filter .18s ease, box-shadow .18s ease, background .18s ease;
+  box-shadow: 0 4px 10px rgba(10,132,255,.25);
+}
+
+button:hover,
+.update-rate-btn:hover,
+#toggle-market-btn:hover{
+  filter: brightness(1.02);
+  box-shadow: 0 6px 16px rgba(10,132,255,.30);
+}
+
+button:active,
+.update-rate-btn:active,
+#toggle-market-btn:active{
+  transform: translateY(1px);
+}
+
+button.secondary{
+  background: transparent;
+  color: var(--text);
+  border:1px solid var(--border);
+  box-shadow: none;
+}
+button.danger{
+  background: linear-gradient(180deg, var(--danger), #e02a22);
+  box-shadow: 0 4px 10px rgba(255,59,48,.25);
+}
+
+/* Helper buttons inside tables */
+.update-rate-btn{
+  padding: 8px 12px;
+  font-size: .9rem;
+}
+
+/* Table */
+#fluctuation-table{
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+#fluctuation-table thead th{
+  text-align: left;
+  font-size: .85rem;
+  font-weight: 700;
+  color: var(--muted);
+  padding: 12px 14px;
+  background: linear-gradient(180deg, rgba(0,0,0,.02), transparent);
+  border-bottom: 1px solid var(--border);
+}
+
+#fluctuation-table tbody td{
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+#fluctuation-table tbody tr:hover{
+  background: rgba(10,132,255,.06);
+}
+
+#fluctuation-table input.new-rate{
+  width: 110px;
+  text-align: right;
+}
+
+/* Small notes */
+p, .form-text{
+  color: var(--muted);
+}
+
+/* Links (if any inside) */
+a{
+  color: var(--primary);
+  text-decoration: none;
+}
+a:hover{ text-decoration: underline; }
+
+/* Utilities for the demo containers that were in your HTML */
+.container .p-5{
+  background: transparent;
+  border: 1px dashed var(--border);
+  color: var(--muted);
+  border-radius: var(--radius-xs);
+}
+
+/* Responsive tweaks */
+@media (max-width: 640px){
+  .card{ padding: 14px; }
+  #adminpanel-content{ padding: 0 14px; }
+  button, .update-rate-btn{ width: 100%; }
+}
+
+/* Focus-visible for keyboard users */
+:focus-visible{
+  outline: none;
+  box-shadow: 0 0 0 4px var(--ring);
+  border-color: var(--primary) !important;
+}
+
+/* Nice subtle separators for sections inside forms */
+.card form h4,
+.card form h5{
+  margin-top: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
