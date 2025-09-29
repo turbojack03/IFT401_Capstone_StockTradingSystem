@@ -8,7 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('frontend_files', filename='adminstyles.css') }}">
     <title>Admin Dashboard</title>
-    <link rel="stylesheet" href="style.css">
+
 </head>
 
 <body>
@@ -17,6 +17,11 @@
         <main id="content">
             <div id="adminpanel-content">
                 <h2>Market Administration Panel</h2>
+
+                <!-- ADDED -->
+                <div class="admin-grid">
+                  <div class="admin-col">
+                <!-- /ADDED -->
 
                 <div class="card">
                     <h3>Create New Stock</h3>
@@ -236,6 +241,11 @@
 
                     </div>
                 </div>
+
+                <!-- ADDED: switch to RIGHT column -->
+                </div><div class="admin-col">
+                <!-- /ADDED -->
+
                 <div class="card">
                     <h3>Stock Panel</h3>
                     <p>Current Stocks: <strong id="number-of-stocks">2</strong></p>
@@ -278,6 +288,10 @@
                     <p>Market is currently: <strong>OPEN</strong></p>
                     <button id="toggle-market-btn">Force Close Market</button>
                 </div>
+
+                <!-- ADDED: close RIGHT column and grid -->
+                </div></div>
+                <!-- /ADDED -->
             </div>
 
             <div class="container px-4 text-center">
@@ -334,6 +348,7 @@
                     this.reset();
                 });
             </script>
+
 
 
 

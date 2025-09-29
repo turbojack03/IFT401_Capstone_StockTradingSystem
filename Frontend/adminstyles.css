@@ -17,6 +17,7 @@
   --radius-sm: 12px;
   --radius-xs: 10px;
   --gap: 16px;
+
 }
 
 @media (prefers-color-scheme: dark){
@@ -49,10 +50,16 @@ body{
 }
 
 #adminpanel-content{
-  max-width: 1080px;
+  max-width: 18000px;
   margin: 24px auto 80px;
   padding: 0 20px;
 }
+
+
+
+
+
+
 
 /* Headings */
 h2{
@@ -261,3 +268,10 @@ a:hover{ text-decoration: underline; }
   padding-top: 12px;
   border-top: 1px solid var(--border);
 }
+.admin-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:var(--gap);align-items:start}
+.admin-col{display:flex;flex-direction:column;gap:var(--gap)}
+@media (max-width:900px){.admin-grid{grid-template-columns:1fr}}
+
+
+

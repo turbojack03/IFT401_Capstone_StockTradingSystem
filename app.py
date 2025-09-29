@@ -43,6 +43,8 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(200), nullable=False) 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_login_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
+    role = db.Column(db.String(10), nullable=False, default='user')  # 'user' or 'admin'
+
 
 class stock_orders(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -53,7 +55,7 @@ class stock_orders(db.Model):
     quantity = db.Column(db.String(200), nullable=False)
     executed_at = db.Column(db.DateTime, nullable=True)
     status = db.Column(db.String(80),nullable=False)
-    date = db.Column(db.DateTime, db.ForeignKey('market_schedule.market_date'), nullable=False)
+    date = db.Column(db.DateTime, nullable=False)
 
 class Stocks(db.Model):  # Stock model for stock data
     id = db.Column(db.Integer, primary_key=True)
@@ -310,4 +312,73 @@ def update_user(user_id):
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+# Routes for Admin Settings page
+@app.route("/user_admin")
+@login_required
+def user_admin():
+    rows = (
+        db.session.query(Accounts, User)
+        .join(User, Accounts.user_id == User.id)
+        .all()
+    )
+    return render_template("user_admin.html", rows=rows)
+
+@app.route("/update_status/<int:account_id>", methods=["POST"])
+@login_required
+def update_status(account_id):
+    acct = Accounts.query.get_or_404(account_id)
+    new_status = request.form.get("status")
+
+    if new_status not in ["Active", "FlaggedAccount", "Banned"]:
+        flash("Invalid status!", "danger")
+    else:
+        acct.status = new_status
+        db.session.commit()
+        flash(f"Account {acct.account_number} status changed to {new_status}", "success")
+
+    return redirect(url_for("user_admin"))
+
+
+
+# How to change account:
+
+
+# 2. query:   UPDATE `user` SET role='user' WHERE username='Admin';
+
+
+# gate admin pages from non-admin users
+from functools import wraps
+from flask import abort
+
+def admin_required(view_func):
+    @wraps(view_func)
+    def wrapper(*args, **kwargs):
+        if not current_user.is_authenticated or current_user.role != 'admin':
+            abort(403)  # or: flash('Admins only', 'danger'); return redirect(url_for('dashboard'))
+        return view_func(*args, **kwargs)
+    return wrapper
+
+@app.route("/adminpanel")
+@login_required
+@admin_required
+def adminpanel():
+    return render_template("adminpanel.html")
+
+@app.route("/adminsettings")
+@login_required
+@admin_required
+def adminsettings():
+    return render_template("adminsettings.html")
+
+@app.route("/user_admin")
+@login_required
+def user_admin():
+    # LEFT OUTER JOIN: show all users, even without accounts
+    rows = (
+        db.session.query(User, Accounts)
+        .outerjoin(Accounts, Accounts.user_id == User.id)
+        .all()
+    )
+    return render_template("user_admin.html", rows=rows)
 
