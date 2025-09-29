@@ -1,3 +1,21 @@
+# Tips
+# WHEN YOU CREATE An @APP.route, you must put it above "app.run"
+# DO NOT QUOTE OUT ANY @app.route it will cause errors
+
+# default role on account creation is USER not admin.
+#you can change it on line 64 for development purposes
+# admin role is required to access /adminpanel and /adminsettings
+
+
+
+# QUICK TIPS FOR MYSQL
+
+#use stock_db; SELECT * FROM user; -- to see users
+#use stock_db; SELECT * FROM accounts; -- to see accounts/money :) arg arg arg - mr krabs
+# to change to admin do in mysql query: UPDATE user SET role='admin' WHERE username='Rootbeer';
+
+
+
 from pathlib import Path
 from flask import Flask, render_template, redirect, url_for, flash, request, send_from_directory
 from flask_bootstrap import Bootstrap5  # or Bootstrap if that's the version you installed
@@ -5,8 +23,9 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.dialects.mysql import SET
-from sqlalchemy import text, func
+from sqlalchemy import text, func , case, cast, Float
 from datetime import datetime
+
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:password@localhost/stock_db'
@@ -115,14 +134,7 @@ def login():
 
     return render_template('login.html')
 
-@app.route("/adminpanel")
-def adminpanel():
-    return render_template("adminpanel.html")
 
-
-@app.route("/adminsettings")
-def adminsettings():
-    return render_template("adminsettings.html")
 
 
 @app.route('/logout')
@@ -178,18 +190,22 @@ def portfolio():
     orders = (
         db.session.query(
             stock_orders.stock_id,
+
+            # Net shares:
             func.sum(
-                func.case(
-                    (stock_orders.buy_or_sell == "BUY", stock_orders.quantity),
-                    else_=-stock_orders.quantity
+                case(
+                    (stock_orders.buy_or_sell == "BUY", cast(stock_orders.quantity, Float)),
+                    else_=-cast(stock_orders.quantity, Float),
                 )
             ).label("net_quantity"),
+
+            # Net investment (signed):
             func.sum(
-                func.case(
-                    (stock_orders.buy_or_sell == "BUY", stock_orders.quantity * Price_ticks.price),
-                    else_=-stock_orders.quantity * Price_ticks.price
+                case(
+                    (stock_orders.buy_or_sell == "BUY", cast(stock_orders.quantity, Float) * Price_ticks.price),
+                    else_=-cast(stock_orders.quantity, Float) * Price_ticks.price,
                 )
-            ).label("net_investment")
+            ).label("net_investment"),
         )
         .join(Price_ticks, Price_ticks.stock_id == stock_orders.stock_id)
         .filter(stock_orders.account_id == account.id)
@@ -310,75 +326,120 @@ def update_user(user_id):
     return redirect(url_for('dashboard'))
 
 
-if __name__ == "__main__":
-    app.run(debug=True)
 
-# Routes for Admin Settings page
-@app.route("/user_admin")
-@login_required
-def user_admin():
-    rows = (
-        db.session.query(Accounts, User)
-        .join(User, Accounts.user_id == User.id)
-        .all()
-    )
-    return render_template("user_admin.html", rows=rows)
-
-@app.route("/update_status/<int:account_id>", methods=["POST"])
-@login_required
-def update_status(account_id):
-    acct = Accounts.query.get_or_404(account_id)
-    new_status = request.form.get("status")
-
-    if new_status not in ["Active", "FlaggedAccount", "Banned"]:
-        flash("Invalid status!", "danger")
-    else:
-        acct.status = new_status
-        db.session.commit()
-        flash(f"Account {acct.account_number} status changed to {new_status}", "success")
-
-    return redirect(url_for("user_admin"))
-
-
-
-# How to change account:
-
-
-# 2. query:   UPDATE `user` SET role='user' WHERE username='Admin';
-
-
-# gate admin pages from non-admin users
+# ---- Admin gate ----
 from functools import wraps
 from flask import abort
 
 def admin_required(view_func):
     @wraps(view_func)
     def wrapper(*args, **kwargs):
-        if not current_user.is_authenticated or current_user.role != 'admin':
-            abort(403)  # or: flash('Admins only', 'danger'); return redirect(url_for('dashboard'))
+        if not current_user.is_authenticated or current_user.role != 'admin': # if role is not admin dont let them in
+            abort(403)
         return view_func(*args, **kwargs)
     return wrapper
 
+# --- ADMIN PANEL ---
 @app.route("/adminpanel")
 @login_required
 @admin_required
 def adminpanel():
     return render_template("adminpanel.html")
 
-@app.route("/adminsettings")
+# --- ADMIN SETTINGS (lists users + accounts) ---
+@app.route("/adminsettings", methods=["GET"])
 @login_required
 @admin_required
 def adminsettings():
-    return render_template("adminsettings.html")
-
-@app.route("/user_admin")
-@login_required
-def user_admin():
-    # LEFT OUTER JOIN: show all users, even without accounts
     rows = (
         db.session.query(User, Accounts)
         .outerjoin(Accounts, Accounts.user_id == User.id)
+        .order_by(User.id.asc())
         .all()
     )
-    return render_template("user_admin.html", rows=rows)
+    # auto-create accounts if missing (optional)
+    created_any = False
+    for u, a in rows:
+        if a is None:
+            a = Accounts(user_id=u.id, status="Active", cash_balance=0.0,
+                         account_number=f"ACCT-{u.id:06d}")
+            db.session.add(a)
+            created_any = True
+    if created_any:
+        db.session.commit()
+        rows = (
+            db.session.query(User, Accounts)
+            .outerjoin(Accounts, Accounts.user_id == User.id)
+            .order_by(User.id.asc())
+            .all()
+        )
+    return render_template("adminsettings.html", rows=rows)
+
+# --- UPDATE (status/cash) ---
+@app.route("/admin/update/<int:user_id>", methods=["POST"])
+@login_required
+@admin_required
+def admin_update_user(user_id):
+    u = User.query.get_or_404(user_id)
+    a = Accounts.query.filter_by(user_id=user_id).first()
+    if a is None:
+        a = Accounts(user_id=user_id, status="Active", cash_balance=0.0,
+                     account_number=f"ACCT-{user_id:06d}")
+        db.session.add(a)
+
+    new_status = request.form.get("status")
+    cash_delta = request.form.get("cash_delta")
+
+    if new_status in {"Active", "Banned", "FlaggedAccount"}:
+        a.status = new_status
+
+    try:
+        if cash_delta:
+            amt = float(cash_delta)
+            a.cash_balance = (a.cash_balance or 0.0) + amt
+        db.session.commit()
+        flash(f"Updated {u.username}.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Update failed: {e}", "danger")
+
+    return redirect(url_for("adminsettings"))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@app.context_processor
+def inject_cash_balance():
+    if current_user.is_authenticated:
+        acct = Accounts.query.filter_by(user_id=current_user.id).first()
+        if acct:
+            return dict(user_cash=acct.cash_balance)
+    return dict(user_cash=0.0)
+
+
+
+
+
+
+
+
+
+
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
+
+
 

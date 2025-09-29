@@ -9,44 +9,7 @@
     <p>This is where profile details will go.</p>
 
 <!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Profile</title>
 
-  <link href="styles.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-  <div class="container py-5">
-    <div class="row justify-content-center">
-      <div class="col-12 col-md-8 col-lg-6">
-        <div class="card shadow-sm">
-          <div class="card-body text-center">
-            <img src="https://placehold.co/96x96" alt="Avatar" class="rounded-circle avatar mb-3">
-            <h4 class="mb-0">{{ current_user.first_name }} {{ current_user.last_name }}</h4>
-            <p class="text-muted">@{{ current_user.username }}</p>
-
-            <p class="small text-muted mb-3">Short bio or tagline goes here.</p>
-
-            <div class="d-grid gap-2 d-sm-flex justify-content-sm-center mb-3">
-              <a href="#" class="btn btn-primary btn-sm">Edit Profile</a>
-              <a href="/settings" class="btn btn-outline-secondary btn-sm" >Settings</a>
-            </div>
-
-            <hr>
-
-            <ul class="list-group list-group-flush text-start">
-              <li class="list-group-item"><strong>Email:</strong> {{ current_user.email }}</li>
-              <li class="list-group-item"><strong>Joined:</strong> {{ current_user.created_at }}</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</body>
-</html>
 
 <div class="container py-4">
   <h2 class="mb-4">User Administration</h2>
@@ -62,48 +25,53 @@
     {% endif %}
   {% endwith %}
 
-  <div class="table-responsive">
-    <table class="table table-bordered align-middle">
-      <thead class="table-dark">
+<table class="table table-sm table-dark">
+  <thead>
+    <tr>
+      <th>UserID</th>
+      <th>Name</th>
+      <th>Username</th>
+      <th>Email</th>
+      <th>Cash</th>
+      <th>Status</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% if rows and rows|length > 0 %}
+      {% for u, a in rows %}
         <tr>
-          <th>UserID</th>
-          <th>Name</th>
-          <th>Username</th>
-          <th>Email</th>
-          <th>Cash</th>
-          <th>Status</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for acct, usr in rows %}
-        <tr>
-          <td>{{ usr.id }}</td>
-          <td>{{ usr.first_name }} {{ usr.last_name }}</td>
-          <td>{{ usr.username }}</td>
-          <td>{{ usr.email }}</td>
-          <td>${{ '%.2f'|format(acct.cash_balance or 0) }}</td>
+          <td>{{ u.id }}</td>
+          <td>{{ u.first_name }} {{ u.last_name }}</td>
+          <td>{{ u.username }}</td>
+          <td>{{ u.email }}</td>
+          <td>${{ (a.cash_balance or 0) | round(2) }}</td>
           <td>
-            <form method="POST" action="{{ url_for('update_status', account_id=acct.id) }}" class="d-flex">
-              <select name="status" class="form-select form-select-sm">
-                <option value="Active" {{ 'selected' if acct.status == 'Active' else '' }}>Active</option>
-                <option value="FlaggedAccount" {{ 'selected' if acct.status == 'FlaggedAccount' else '' }}>FlaggedAccount</option>
-                <option value="Banned" {{ 'selected' if acct.status == 'Banned' else '' }}>Banned</option>
+            <form method="post" action="{{ url_for('admin_update_user', user_id=u.id) }}" class="d-flex gap-2">
+              <select name="status" class="form-select form-select-sm" style="max-width: 180px;">
+                {% set cur = (a.status or 'Active') %}
+                <option value="Active"          {% if cur=='Active' %}selected{% endif %}>Active</option>
+                <option value="FlaggedAccount"  {% if cur=='FlaggedAccount' %}selected{% endif %}>FlaggedAccount</option>
+                <option value="Banned"          {% if cur=='Banned' %}selected{% endif %}>Banned</option>
               </select>
-              <button type="submit" class="btn btn-sm btn-primary ms-2">Save</button>
+
+              <!-- Give them money (positive adds, negative subtracts) -->
+              <input type="number" step="0.01" name="cash_delta" class="form-control form-control-sm"
+                     placeholder="+10.00 or -5.00" style="max-width: 140px;">
+
+              <button type="submit" class="btn btn-sm btn-primary">Save</button>
             </form>
           </td>
           <td>
-            <!-- Could add Delete/Edit user buttons here if needed -->
+            <!-- Optional: more admin actions could go here -->
           </td>
         </tr>
-        {% else %}
-        <tr><td colspan="7" class="text-center text-muted">No users found</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</div>
+      {% endfor %}
+    {% else %}
+      <tr><td colspan="7" class="text-muted">No users found.</td></tr>
+    {% endif %}
+  </tbody>
+</table>
 
 
 

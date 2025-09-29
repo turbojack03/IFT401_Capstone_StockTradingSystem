@@ -19,6 +19,14 @@ html, body { height: 100%; }
   
 }
 
+.nav-cash {
+  background-color: #198754; /* Bootstrap green */
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: 500;
+  padding-right: 30px;
+}
 
 main {
   flex: 1;  /* pushes footer down */
