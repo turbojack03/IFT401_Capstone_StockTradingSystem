@@ -1,43 +1,44 @@
 {% extends "base.html" %}
-{% block title %}portfolio{% endblock %}
 {% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">My Portfolio</h2>
 
-  <h1>Portfolio</h1>
-  <p>This is where portfolio details will go.</p>
+    {% if portfolio %}
+    <table class="table table-hover table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th scope="col">Stock</th>
+                <th scope="col">Current price</th>
+                <th scope="col">Shares</th>
+                <th scope="col">Investment</th>
+                <th scope="col">Total P/L</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for stock in portfolio %}
+            <tr>
+                <td scope="col">{{ stock.symbol }}</td>
+                <td>${{ "%.2f"|format(stock.current_price) }}</td>
+                <td>{{ "%.2f"|format(stock.shares) }}</td>
+                <td>${{ "%.2f"|format(stock.investment) }}</td>
+                <td class="{% if stock.profit_loss >= 0 %}text-success{% else %}text-danger{% endif %}">
+                    ${{ "%.2f"|format(stock.profit_loss) }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
-<table class="table">
-  <thead>
-    <tr>
-      <th scope="col">NAME</th>
-      <th scope="col">Shares#</th>
-      <th scope="col">Bought Amount</th>
-      <th scope="col">Current Value</th>
-      <th scope="col">DoP</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th scope="row">1</th>
-      <td>Mark</td>
-      <td>Otto</td>
-      <td>@mdo</td>
-    </tr>
-    <tr>
-      <th scope="row">2</th>
-      <td>Jacob</td>
-      <td>Thornton</td>
-      <td>@fat</td>
-    </tr>
-    <tr>
-      <th scope="row">3</th>
-      <td>John</td>
-      <td>Doe</td>
-      <td>@social</td>
-    </tr>
-  </tbody>
-</table>
+    <div class="mt-4">
+        <h5>Total Investment: ${{ "%.2f"|format(total_investment) }}</h5>
+        <h5>Total Value: ${{ "%.2f"|format(total_value) }}</h5>
+        <h5 class="{% if total_pl >= 0 %}text-success{% else %}text-danger{% endif %}">
+            Net P/L: ${{ "%.2f"|format(total_pl) }}
+        </h5>
+    </div>
 
-
-
-
+    {% else %}
+    <p class="text-muted">You currently have no stocks in your portfolio.</p>
+    {% endif %}
+</div>
 {% endblock %}

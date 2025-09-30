@@ -1,0 +1,355 @@
+{% extends "base.html" %}
+{% block title %}adminpanel{% endblock %}
+{% block content %}
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('frontend_files', filename='adminstyles.css') }}">
+    <title>Admin Dashboard</title>
+
+</head>
+
+<body>
+    <div id="app">
+
+        <main id="content">
+            <div id="adminpanel-content">
+                <h2>Market Administration Panel</h2>
+
+                <!-- ADDED -->
+                <div class="admin-grid">
+                  <div class="admin-col">
+                <!-- /ADDED -->
+
+                <div class="card">
+                    <h3>Create New Stock</h3>
+                    <form id="create-stock-form">
+                        <label for="company_name">Company Name:</label>
+                        <input type="text" id="company_name" required>
+
+                        <label for="ticker">Ticker Symbol (4 Letters maxlength):</label>
+                        <input type="text" id="ticker" maxlength="5" required>
+
+                        <label for="initial_price">Initial Price:</label>
+                        <!-- defines the intial price the stock is set at-->
+                        <input type="number" id="initial_price" min="0.01" step="0.01" required value="10.00">
+
+                        <label for="volume">Initial Volume:</label> <!-- amount of shares-->
+                        <input type="number" id="volume" min="1" step="1" required value="100000">
+
+                        <!-- sliders to control how the stock changes-->
+                        <!-- Drift μ -->
+                        <label class="form-label" for="mu">
+                            Drift μ (annualized) <span class="value" id="muVal">+5.0%</span>
+                        </label>
+                        <input type="range" id="mu" name="mu" min="-0.20" max="0.20" step="0.005" value="0.05">
+                        <p class="definition">Drift is the long-term average growth or decline of the stock price.</p>
+                        <button type="button" class="btn btn-sm btn-outline-secondary reset-btn" data-target="mu"
+                            data-default="0.05">Reset</button>
+
+                        <!-- Volatility σ -->
+                        <label class="form-label" for="sigma">
+                            Volatility σ (annualized) <span class="value" id="sigmaVal">20.0%</span>
+                        </label>
+                        <input type="range" id="sigma" name="sigma" min="0.05" max="1.00" step="0.01" value="0.20">
+                        <p class="definition">Volatility measures how much the stock price jumps up and down.</p>
+                        <button type="button" class="btn btn-sm btn-outline-secondary reset-btn" data-target="sigma"
+                            data-default="0.20">Reset</button>
+
+
+
+                        <!-- Max Step -->
+                        <label class="form-label" for="maxStep">
+                            Max Step per Tick (percent) <span class="value" id="maxStepVal">1.0%</span>
+                        </label>
+                        <input type="range" id="maxStep" name="max_step_pct" min="0.1" max="5.0" step="0.1" value="1.0">
+                        <p class="definition">Caps how much a stock can move up or down in one tick.</p>
+                        <button type="button" class="btn btn-sm btn-outline-secondary reset-btn" data-target="maxStep"
+                            data-default="1.0">Reset</button>
+
+
+
+
+                        <!-- this shows the user waht % each bar is it-->
+                        <script>
+                            const $ = (id) => document.getElementById(id);
+
+                            // live label updates
+                            function setPct(id, val) { $(id).textContent = (val * 100).toFixed(1) + '%'; }
+                            $('mu').addEventListener('input', e => setPct('muVal', +e.target.value));
+                            $('sigma').addEventListener('input', e => setPct('sigmaVal', +e.target.value));
+                            $('maxStep').addEventListener('input', e => $('maxStepVal').textContent = (+e.target.value).toFixed(1) + '%');
+
+                            // init labels
+                            setPct('muVal', +$('mu').value);
+                            setPct('sigmaVal', +$('sigma').value);
+
+                            $('maxStepVal').textContent = (+$('maxStep').value).toFixed(1) + '%';
+
+                            // reset buttons
+                            document.querySelectorAll('.reset-btn').forEach(btn => {
+                                btn.addEventListener('click', () => {
+                                    const target = document.getElementById(btn.dataset.target);
+                                    target.value = btn.dataset.default;
+                                    target.dispatchEvent(new Event('input')); // update label
+                                });
+                            });
+                        </script>
+
+
+
+                        <!-- second script-->
+                        <!-- reset buttons for sliders under Create New Stock card-->
+                        <script>
+                            // live label updates
+                            function setPct(id, val) { $(id).textContent = (val * 100).toFixed(1) + '%'; }
+
+                            function updateLabels() {
+                                setPct('muVal', +$('mu').value);
+                                setPct('sigmaVal', +$('sigma').value);
+                                $('intervalVal').textContent = $('interval').value + ' ms';
+                                $('maxStepVal').textContent = (+$('maxStep').value).toFixed(1) + '%';
+                            }
+
+                            // store initial values at load
+                            document.querySelectorAll('input[type="range"]').forEach(slider => {
+                                slider.dataset.initial = slider.value;  // save original value
+                            });
+
+                            // attach events
+                            $('mu').addEventListener('input', updateLabels);
+                            $('sigma').addEventListener('input', updateLabels);
+                            $('interval').addEventListener('input', updateLabels);
+                            $('maxStep').addEventListener('input', updateLabels);
+
+                            // reset buttons
+                            document.querySelectorAll('.reset-btn').forEach(btn => {
+                                btn.addEventListener('click', () => {
+                                    const target = $(btn.dataset.target);
+                                    target.value = target.dataset.initial;   // restore saved initial value
+                                    target.dispatchEvent(new Event('input')); // update label
+                                });
+                            });
+
+                            // init once
+                            updateLabels();
+
+
+
+
+
+                        </script>
+
+                        <button type="submit">Create Stock</button>
+                    </form>
+                </div>
+                <div class="container px-4 text-center">
+                    <div class="row gx-5">
+                        <div class="col">
+                            <div class="p-5">Custom column padding</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>Market Schedule & Configuration</h3>
+                    <form id="market-config-form">
+                        <h4>Trading Hours</h4>
+                        <div class="flex-group">
+                            <div>
+                                <label for="open_time">Open Time:</label>
+                                <input type="time" id="open_time" required value="09:30">
+                            </div>
+                            <div>
+                                <label for="close_time">Close Time:</label>
+                                <input type="time" id="close_time" required value="16:00">
+                            </div>
+                        </div>
+
+                        <h4>Trading Days (Check to Open)</h4>
+                        <div id="open-days-checkboxes" style="margin-bottom: 15px;">
+                            <label style="margin-right: 15px;">
+                                <input type="checkbox" name="open_day" value="0">
+                                Sun
+                            </label>
+                            <label style="margin-right: 15px;">
+                                <input type="checkbox" name="open_day" value="1" checked>
+                                Mon
+                            </label>
+                            <label style="margin-right: 15px;">
+                                <input type="checkbox" name="open_day" value="2" checked>
+                                Tue
+                            </label>
+                            <label style="margin-right: 15px;">
+                                <input type="checkbox" name="open_day" value="3" checked>
+                                Wed
+                            </label>
+                            <label style="margin-right: 15px;">
+                                <input type="checkbox" name="open_day" value="4" checked>
+                                Thu
+                            </label>
+                            <label style="margin-right: 15px;">
+                                <input type="checkbox" name="open_day" value="5" checked>
+                                Fri
+                            </label>
+                            <label style="margin-right: 15px;">
+                                <input type="checkbox" name="open_day" value="6">
+                                Sat
+                            </label>
+                        </div>
+
+                        <h4>Tick Configuration (Stock Fluctuation Rate)</h4>
+                        <label for="tick_interval_ms">Tick Interval (ms):</label>
+                        <input type="number" id="tick_interval_ms" min="100" step="100" required value="1000">
+                        <p style="font-size: 0.9em; color: var(--secondary-color);">Note: Default is 1000ms (1 second)
+                            per tick simulation.</p>
+
+                        <h4>Holidays & Closures</h4>
+                        <div id="holiday-presets">
+                            <h5>Common Holidays:</h5>
+                            <label style="margin-right: 20px;">
+                                <input type="checkbox" name="holiday_preset" data-date-placeholder="01-01" checked>
+                                New Year's Day
+                            </label><br>
+                            <label style="margin-right: 20px;">
+                                <input type="checkbox" name="holiday_preset" data-date-placeholder="12-25" checked>
+                                Christmas Day
+                            </label><br>
+                            <label style="margin-right: 20px;">
+                                <input type="checkbox" name="holiday_preset" data-date-placeholder="11-28">
+                                Thanksgiving
+                            </label>
+                        </div>
+
+                        <h5>Specific Closure Dates (YYYY-MM-DD):</h5>
+                        <textarea id="specific_holidays" rows="3"
+                            placeholder="2024-11-28, 2025-01-01">2024-12-25, 2025-01-01</textarea>
+
+                        <button type="submit">Save Market Configuration</button>
+                    </form>
+                </div>
+
+
+                <div class="container px-4 text-center">
+                    <div class="row gx-5">
+                        <div class="col">
+                            <div class="p-5">Custom column padding</div>
+                        </div>
+
+
+
+                    </div>
+                </div>
+
+                <!-- ADDED: switch to RIGHT column -->
+                </div><div class="admin-col">
+                <!-- /ADDED -->
+
+                <div class="card">
+                    <h3>Stock Panel</h3>
+                    <p>Current Stocks: <strong id="number-of-stocks">2</strong></p>
+                    <button id="refresh-stocks-btn">Refresh Stock List</button>
+                    <button id="">Apply All Rate Changes</button>
+                    <table id="fluctuation-table">
+                        <thead>
+                            <tr>
+                                <th>Ticker</th>
+                                <th>Company Name</th>
+                                <th>Current Price</th>
+                                <th>Drift μ</th>
+                                <th>Volatility σ</th>
+
+                                <th>Max Step per Tick(%)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr data-ticker="AAPL">
+                                <td>AAPL</td>
+                                <td>Apple Inc.</td>
+                                <td>$150.00</td>
+                                <td>5%</td>
+                                <td>20%</td>
+
+                                <td>1.0%</td>
+
+                                <td><button class="update-rate-btn" data-ticker="AAPL">Update</button></td>
+                                <td><button class="edit-stock-btn" data-ticker="AAPL">Edit</button></td>
+                            </tr>
+
+
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card">
+                    <h3>Market Status Simulation</h3>
+                    <p>Market is currently: <strong>OPEN</strong></p>
+                    <button id="toggle-market-btn">Force Close Market</button>
+                </div>
+
+                <!-- ADDED: close RIGHT column and grid -->
+                </div></div>
+                <!-- /ADDED -->
+            </div>
+
+            <div class="container px-4 text-center">
+                <div class="row gx-5">
+                    <div class="col">
+                        <div class="p-5">Custom column padding</div>
+                    </div>
+
+
+
+                </div>
+            </div>
+
+            <script>
+                // Replace your previous "create-stock-form" handler with this one
+                document.getElementById("create-stock-form").addEventListener("submit", function (e) {
+                    e.preventDefault();
+
+                    // Form values
+                    const company = document.getElementById("company_name").value.trim();
+                    const ticker = document.getElementById("ticker").value.trim().toUpperCase();
+                    const price = Number(document.getElementById("initial_price").value || 0).toFixed(2);
+
+                    // Slider values
+                    const mu = Number(document.getElementById("mu").value);        // drift (decimal)
+                    const sigma = Number(document.getElementById("sigma").value);     // volatility (decimal)
+
+                    const maxStep = Number(document.getElementById("maxStep").value);   // % per tick (0.1..5.0)
+
+                    if (!company || !ticker) return;
+
+                    // Build the new row with ALL columns in your header
+                    const row = document.createElement("tr");
+                    row.dataset.ticker = ticker;
+                    row.innerHTML = `
+                    <td>${ticker}</td>
+                    <td>${company}</td>
+                    <td>$${price}</td>
+                    <td>${(mu * 100).toFixed(1)}%</td>
+                    <td>${(sigma * 100).toFixed(1)}%</td>
+                    <td>${maxStep.toFixed(1)}%</td>
+                    <td><button class="update-rate-btn" data-ticker="${ticker}">Update</button></td>
+                    <td><button class="edit-stock-btn" data-ticker="${ticker}">Edit</button></td>
+    `;
+
+                    // Append to table
+                    document.querySelector("#fluctuation-table tbody").appendChild(row);
+
+                    // Increment stock count display
+                    const countEl = document.getElementById("number-of-stocks");
+                    countEl.textContent = String(Number(countEl.textContent || 0) + 1);
+
+                    // Optional: reset form (keeps your slider defaults if desired)
+                    this.reset();
+                });
+            </script>
+
+
+
+
+            {% endblock %}

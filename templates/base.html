@@ -30,6 +30,7 @@
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav">
           <li class="nav-item"><a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('portfolio') }}">Portfolio</a></li>
 
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown"
@@ -40,11 +41,14 @@
 
               <li><a class="dropdown-item" href="{{ url_for('profile') }}">View Profile</a></li>
               <li><a class="dropdown-item" href="{{ url_for('settings') }}">Settings</a></li>
-              <li><a class="dropdown-item" href="{{ url_for('portfolio') }}">Portfolio</a></li>
               <li><a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a></li>
             </ul>
+
           </li>
 
+
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('adminpanel') }}">adminpanel</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('adminsettings') }}">adminsettings</a></li>
 
           <li class="nav-item"><a class="nav-link hidden"
               href="{{ url_for('questionmarkquestionmarkquestionmark') }}">???</a></li>
@@ -53,15 +57,25 @@
         </ul>
       </div>
     </div>
-
+{% if current_user.is_authenticated %}
+<ul class="navbar-nav ms-auto">
+  <li class="nav-item">
+    <a class="nav-link">
+      <i class="bi bi-wallet2"></i>
+      Balance:
+      <span class="badge bg-success">${{ "%.2f"|format(user_cash) }}</span>
+    </a>
+  </li>
+</ul>
+{% endif %}
 
   </nav>
 
 
 
-  {% block content %}
+  
   <main class="container mt-4">
-
+    {% block content %}
     <h1>Welcome to Bamboo StockSim!</h1>
     <p>Your ultimate stock market simulation experience.</p>
 

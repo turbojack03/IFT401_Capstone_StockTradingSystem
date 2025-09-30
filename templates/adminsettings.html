@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}adminsettings{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('frontend_files', filename='adminstyles.css') }}">
+
+
+
+    <h1>Profile</h1>
+    <p>This is where profile details will go.</p>
+
+<!doctype html>
+
+
+<div class="container py-4">
+  <h2 class="mb-4">User Administration</h2>
+
+  {% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+      {% for category, msg in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ msg }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+<table class="table table-sm table-dark">
+  <thead>
+    <tr>
+      <th>UserID</th>
+      <th>Name</th>
+      <th>Username</th>
+      <th>Email</th>
+      <th>Cash</th>
+      <th>Status</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% if rows and rows|length > 0 %}
+      {% for u, a in rows %}
+        <tr>
+          <td>{{ u.id }}</td>
+          <td>{{ u.first_name }} {{ u.last_name }}</td>
+          <td>{{ u.username }}</td>
+          <td>{{ u.email }}</td>
+          <td>${{ (a.cash_balance or 0) | round(2) }}</td>
+          <td>
+            <form method="post" action="{{ url_for('admin_update_user', user_id=u.id) }}" class="d-flex gap-2">
+              <select name="status" class="form-select form-select-sm" style="max-width: 180px;">
+                {% set cur = (a.status or 'Active') %}
+                <option value="Active"          {% if cur=='Active' %}selected{% endif %}>Active</option>
+                <option value="FlaggedAccount"  {% if cur=='FlaggedAccount' %}selected{% endif %}>FlaggedAccount</option>
+                <option value="Banned"          {% if cur=='Banned' %}selected{% endif %}>Banned</option>
+              </select>
+
+              <!-- Give them money (positive adds, negative subtracts) -->
+              <input type="number" step="0.01" name="cash_delta" class="form-control form-control-sm"
+                     placeholder="+10.00 or -5.00" style="max-width: 140px;">
+
+              <button type="submit" class="btn btn-sm btn-primary">Save</button>
+            </form>
+          </td>
+          <td>
+            <!-- Optional: more admin actions could go here -->
+          </td>
+        </tr>
+      {% endfor %}
+    {% else %}
+      <tr><td colspan="7" class="text-muted">No users found.</td></tr>
+    {% endif %}
+  </tbody>
+</table>
+
+
+
+{% endblock %}
