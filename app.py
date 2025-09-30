@@ -38,7 +38,8 @@ db = SQLAlchemy(app)  #lets u interact with the database
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'  
-
+with app.app_context(): # Create database tables
+    db.create_all()
 #tables
 class Accounts(db.Model):  # Accounts model
     id = db.Column(db.Integer, primary_key=True)
