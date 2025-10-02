@@ -13,15 +13,15 @@
 <div class="row justify-content-center my-4">
 <div class="col-10 col-md-6 col-lg-4">
 <div class="d-grid gap-2">
-<button type="button" class="btn btn-dark w-100 mb-2" data-bs-toggle="modal" data-bs-target="#exampleModal">
+<button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#exampleModal">
   Log Out
 </button>
 
 
-<button type="button" class="btn btn-dark">
+<button type="button" class="btn btn-dark"
+        onclick="window.location.href='{{ url_for('changepassword') }}'">
   Change Password
 </button>
-
 
 <button type="button" class="btn btn-dark" >
   Change Theme
@@ -58,7 +58,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-danger" data-bs-dismiss="modal">No</button>
-        <button type="button" class="btn btn-success">Yes</button>
+        <a class="btn btn-success" href="{{ url_for('logout') }}">Yes</a>
       </div>
     </div>
   </div>

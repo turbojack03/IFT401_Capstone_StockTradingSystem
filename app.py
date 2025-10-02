@@ -63,7 +63,7 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(200), nullable=False) 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_login_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
-    role = db.Column(db.String(10), nullable=False, default='user')  # 'user' or 'admin'
+    role = db.Column(db.String(10), nullable=False, default='admin')  # 'user' or 'admin'
 
 
 class stock_orders(db.Model):
@@ -252,6 +252,23 @@ def portfolio():
 @login_required
 def profile():
     return render_template("profile.html")
+
+
+@app.route("/changepassword", methods=["GET", "POST"])
+@login_required
+def changepassword():
+    if request.method == "POST":
+        new = request.form.get("new_password")
+        confrim = request.form.get("confrim_password")
+
+        if new == confrim:
+            current_user.password = generate_password_hash(new)
+            db.session.commit()
+            logout_user()
+            return redirect(url_for("login"))
+        else:
+            return render_template("changepassword.html")
+    return render_template("changepassword.html")
 
 @app.route("/accounthistory")
 @login_required
