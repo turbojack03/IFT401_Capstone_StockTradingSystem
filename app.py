@@ -63,7 +63,7 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(200), nullable=False) 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_login_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
-    role = db.Column(db.String(10), nullable=False, default='admin')  # 'user' or 'admin'
+    role = db.Column(db.String(10), nullable=False, default='user')  # 'user' or 'admin'
 
 
 class stock_orders(db.Model):
