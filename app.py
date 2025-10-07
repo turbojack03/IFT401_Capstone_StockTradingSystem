@@ -371,6 +371,24 @@ def update_user(user_id):
     flash(f'User {username} updated successfully!', 'success')
     return redirect(url_for('dashboard'))
 
+@app.route('/availablestock')
+def available_stocks():
+
+    stocks = Stocks.query.filter_by(is_active=True).all()
+
+    stock_list = []
+    for s in stocks:
+        stock_list.append({
+            'symbol': s.ticker,
+            'name': s.company_name,
+            'price': s.initial_price,
+            'change': 0.0,
+            'percent': 0.0,
+            'market_cap': '-',
+            'volume': '-',
+            'sector': '' 
+        })
+    return render_template('availablestock.html', stocks=stock_list)
 
 
 # ---- Admin gate ----
