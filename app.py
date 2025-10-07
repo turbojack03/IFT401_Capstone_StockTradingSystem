@@ -68,14 +68,14 @@ class User(db.Model, UserMixin):
 
 class stock_orders(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    account_id = db.Column(db.Integer, db.ForeignKey('accounts.id'), primary_key=True)
-    stock_id = db.Column(db.Integer, db.ForeignKey('stocks.id'), primary_key=True)
+    account_id = db.Column(db.Integer, db.ForeignKey('accounts.id'),nullable=False)
+    stock_id = db.Column(db.Integer, db.ForeignKey('stocks.id'),nullable=False)
     buy_or_sell = db.Column(db.String(80),nullable=False)
     order_type = db.Column(db.String(120),nullable=False)
-    quantity = db.Column(db.String(200), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False)
     executed_at = db.Column(db.DateTime, nullable=True)
-    status = db.Column(db.String(80),nullable=False)
-    date = db.Column(db.DateTime, nullable=False)
+    status = db.Column(db.String(80),nullable=False, default="Pending")
+    date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
 class Stocks(db.Model):  # Stock model for stock data
     id = db.Column(db.Integer, primary_key=True)
@@ -83,7 +83,7 @@ class Stocks(db.Model):  # Stock model for stock data
     company_name = db.Column(db.String(100), nullable=False)
     is_active = db.Column(db.Boolean)
     initial_price = db.Column(db.Float, nullable=False)
-    created_at = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Market_schdule(db.Model):  # Market schedule model
     id = db.Column(db.Integer, primary_key=True)
@@ -126,8 +126,6 @@ def login():
             user.last_login_at = datetime.utcnow()
             db.session.commit()            
             login_user(user)
-
-            flash('Logged in successfully!', 'success')
             next_page = request.args.get('next')
             return redirect(next_page or url_for('dashboard'))
         else:
@@ -174,11 +172,46 @@ def register():
 
     return render_template('register.html')
 
-@app.route('/')
+@app.route('/', methods=["GET", "POST"])
 @login_required
 def dashboard():
-    users = User.query.all()
-    return render_template('dashboard.html', users=users)
+    if request.method == "POST":
+        stock_symbol = request.form.get("stockSymbol")
+        buy_or_sell = request.form.get("buy_or_sell")
+        order_type = request.form.get("orderType")
+        quantity = request.form.get("quantity")
+
+        account = Accounts.query.filter_by(user_id=current_user.id).first()
+        if not account:
+            flash("No account found for this user.", "danger")
+            return redirect(url_for("dashboard"))
+
+        stock = Stocks.query.filter_by(ticker=stock_symbol.upper()).first()
+        if not stock:
+            flash(f"Stock '{stock_symbol}' not found.", "danger")
+            return redirect(url_for("dashboard"))
+
+        try:
+            new_order = stock_orders(
+                account_id=account.id,
+                stock_id=stock.id,
+                buy_or_sell=buy_or_sell,
+                order_type=order_type,
+                quantity=int(quantity),
+                status="Pending"
+            )
+            db.session.add(new_order)
+            db.session.commit()
+            flash("Order submitted successfully!", "success")
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Failed to submit order: {e}", "danger")
+
+        return redirect(url_for("dashboard"))
+
+    orders = stock_orders.query.all()
+    stocks = Stocks.query.filter_by(is_active=True).all()
+    return render_template("dashboard.html", orders=orders, stocks=stocks)
 
 @app.route("/portfolio")
 @login_required
@@ -253,6 +286,23 @@ def portfolio():
 def profile():
     return render_template("profile.html")
 
+
+@app.route("/changepassword", methods=["GET", "POST"])
+@login_required
+def changepassword():
+    if request.method == "POST":
+        new = request.form.get("new_password")
+        confrim = request.form.get("confrim_password")
+
+        if new == confrim:
+            current_user.password = generate_password_hash(new)
+            db.session.commit()
+            logout_user()
+            return redirect(url_for("login"))
+        else:
+            return render_template("changepassword.html")
+    return render_template("changepassword.html")
+
 @app.route("/accounthistory")
 @login_required
 def accounthistory():
@@ -262,11 +312,6 @@ def accounthistory():
 @login_required
 def settings():
     return render_template("settings.html")
-
-@app.route("/questionmarkquestionmarkquestionmark")
-@login_required
-def questionmarkquestionmarkquestionmark():
-    return render_template("questionmarkquestionmarkquestionmark.html")
 
 #CRUD routes
 @app.route('/add_user', methods=['POST'])

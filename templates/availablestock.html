@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+{% block title %}Available Stock{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h1 class="h3 m-0">Available Stocks</h1>
+    <div class="d-flex gap-2">
+      <input id="searchInput" class="form-control" type="search" placeholder="Search by symbol or name" aria-label="Search">
+      <select id="sectorFilter" class="form-select" aria-label="Filter by sector">
+        <option value="">All Sectors</option>
+        <option>Technology</option>
+        <option>Financials</option>
+        <option>Healthcare</option>
+        <option>Energy</option>
+        <option>Consumer</option>
+        <option>Industrials</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th style="width: 110px;">Symbol</th>
+              <th>Name</th>
+              <th class="text-end sortable" data-sort="price">Price</th>
+              <th class="text-end sortable" data-sort="change">Change</th>
+              <th class="text-end sortable" data-sort="percent">%</th>
+              <th class="text-end d-none d-md-table-cell">Market Cap</th>
+              <th class="text-end d-none d-lg-table-cell">Volume</th>
+              <th class="text-end">Action</th>
+            </tr>
+          </thead>
+          <tbody id="stockTableBody">
+            {# Sample rows; if server provides 'stocks', loop them instead #}
+            {% if stocks %}
+              {% for s in stocks %}
+              <tr data-sector="{{ s.sector|default('') }}">
+                <td><span class="badge text-bg-secondary">{{ s.symbol }}</span></td>
+                <td>{{ s.name }}</td>
+                <td class="text-end" data-price="{{ s.price|float }}">{{ '%.2f'|format(s.price|float) }}</td>
+                {% set chg = (s.change|float) %}
+                {% set pct = (s.percent|float) %}
+                <td class="text-end fw-medium {{ 'text-success' if chg >= 0 else 'text-danger' }}">{{ '%+.2f'|format(chg) }}</td>
+                <td class="text-end fw-medium {{ 'text-success' if pct >= 0 else 'text-danger' }}">{{ '%+.2f%%'|format(pct) }}</td>
+                <td class="text-end d-none d-md-table-cell">{{ s.market_cap|default('-') }}</td>
+                <td class="text-end d-none d-lg-table-cell">{{ s.volume|default('-') }}</td>
+                <td class="text-end">
+                  <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#tradeModal"
+                          data-symbol="{{ s.symbol }}" data-name="{{ s.name }}" data-price="{{ s.price }}">
+                    Buy / Sell
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}
+            {% else %}
+              {# Fallback demo rows for static preview #}
+              {% for row in [
+                {'symbol':'AAPL','name':'Apple Inc.','price':229.12,'change':+1.42,'percent':+0.62,'market_cap':'$3.5T','volume':'45.2M','sector':'Technology'},
+                {'symbol':'MSFT','name':'Microsoft Corp.','price':418.73,'change':-2.35,'percent':-0.56,'market_cap':'$3.1T','volume':'23.0M','sector':'Technology'},
+                {'symbol':'JPM','name':'JPMorgan Chase & Co.','price':205.91,'change':+0.80,'percent':+0.39,'market_cap':'$600B','volume':'12.4M','sector':'Financials'},
+                {'symbol':'XOM','name':'Exxon Mobil','price':118.04,'change':-0.44,'percent':-0.37,'market_cap':'$470B','volume':'8.7M','sector':'Energy'},
+                {'symbol':'PFE','name':'Pfizer Inc.','price':32.67,'change':+0.09,'percent':+0.28,'market_cap':'$185B','volume':'17.8M','sector':'Healthcare'}
+              ] %}
+              <tr data-sector="{{ row.sector }}">
+                <td><span class="badge text-bg-secondary">{{ row.symbol }}</span></td>
+                <td>{{ row.name }}</td>
+                <td class="text-end" data-price="{{ row.price }}">{{ '%.2f'|format(row.price) }}</td>
+                <td class="text-end fw-medium {{ 'text-success' if row.change >= 0 else 'text-danger' }}">{{ '%+.2f'|format(row.change) }}</td>
+                <td class="text-end fw-medium {{ 'text-success' if row.percent >= 0 else 'text-danger' }}">{{ '%+.2f%%'|format(row.percent) }}</td>
+                <td class="text-end d-none d-md-table-cell">{{ row.market_cap }}</td>
+                <td class="text-end d-none d-lg-table-cell">{{ row.volume }}</td>
+                <td class="text-end">
+                  <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#tradeModal"
+                          data-symbol="{{ row.symbol }}" data-name="{{ row.name }}" data-price="{{ row.price }}">
+                    Buy / Sell
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card-footer d-flex justify-content-between align-items-center">
+      <small class="text-muted" id="rowCount">Showing 0 items</small>
+      <div class="btn-group" role="group" aria-label="Pagination">
+        <button class="btn btn-outline-secondary btn-sm" id="prevPage" disabled>Prev</button>
+        <button class="btn btn-outline-secondary btn-sm" id="nextPage" disabled>Next</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Trade Modal -->
+<div class="modal fade" id="tradeModal" tabindex="-1" aria-labelledby="tradeModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="tradeModalLabel">Place Order</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="orderForm">
+          <div class="mb-3">
+            <label class="form-label">Symbol</label>
+            <input type="text" class="form-control" id="orderSymbol" readonly>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Name</label>
+            <input type="text" class="form-control" id="orderName" readonly>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Price</label>
+            <input type="number" class="form-control" id="orderPrice" step="0.01" readonly>
+          </div>
+          <div class="row g-2">
+            <div class="col-md-6">
+              <label for="orderSide" class="form-label">Side</label>
+              <select id="orderSide" class="form-select" required>
+                <option value="buy" selected>Buy</option>
+                <option value="sell">Sell</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label for="orderQty" class="form-label">Quantity</label>
+              <input id="orderQty" type="number" min="1" step="1" class="form-control" placeholder="e.g. 10" required>
+            </div>
+          </div>
+          <div class="mt-3 form-check">
+            <input class="form-check-input" type="checkbox" id="limitToggle">
+            <label class="form-check-label" for="limitToggle">Use limit price</label>
+          </div>
+          <div class="mt-2 d-none" id="limitGroup">
+            <label class="form-label" for="limitPrice">Limit Price</label>
+            <input id="limitPrice" type="number" step="0.01" class="form-control" placeholder="e.g. 150.00">
+          </div>
+          <div class="mt-3">
+            <button type="submit" class="btn btn-success w-100">Submit Order</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+  const rowsPerPage = 10;
+  let currentPage = 1;
+
+  const searchInput = document.getElementById('searchInput');
+  const sectorFilter = document.getElementById('sectorFilter');
+  const tableBody = document.getElementById('stockTableBody');
+  const rowCount = document.getElementById('rowCount');
+  const prevBtn = document.getElementById('prevPage');
+  const nextBtn = document.getElementById('nextPage');
+
+  function getAllRows() {
+    return Array.from(tableBody.querySelectorAll('tr'));
+  }
+
+  function applyFilters() {
+    const q = (searchInput.value || '').trim().toLowerCase();
+    const sector = sectorFilter.value;
+
+    getAllRows().forEach(tr => {
+      const symbol = (tr.children[0].innerText || '').toLowerCase();
+      const name = (tr.children[1].innerText || '').toLowerCase();
+      const trSector = tr.getAttribute('data-sector') || '';
+      const matchesSearch = !q || symbol.includes(q) || name.includes(q);
+      const matchesSector = !sector || trSector === sector;
+      tr.dataset.visible = (matchesSearch && matchesSector) ? '1' : '0';
+    });
+
+    currentPage = 1;
+    paginate();
+  }
+
+  function visibleRows() {
+    return getAllRows().filter(tr => tr.dataset.visible !== '0');
+  }
+
+  function paginate() {
+    const visible = visibleRows();
+    const total = visible.length;
+    const totalPages = Math.max(1, Math.ceil(total / rowsPerPage));
+    currentPage = Math.min(currentPage, totalPages);
+
+    getAllRows().forEach(tr => tr.classList.add('d-none'));
+
+    const start = (currentPage - 1) * rowsPerPage;
+    const slice = visible.slice(start, start + rowsPerPage);
+    slice.forEach(tr => tr.classList.remove('d-none'));
+
+    prevBtn.disabled = currentPage === 1;
+    nextBtn.disabled = currentPage === totalPages;
+    rowCount.textContent = `Showing ${slice.length} of ${total} items`;
+  }
+
+  // Sorting
+  document.querySelectorAll('.sortable').forEach(th => {
+    th.style.cursor = 'pointer';
+    th.addEventListener('click', () => {
+      const key = th.dataset.sort;
+      const idx = key === 'price' ? 2 : key === 'change' ? 3 : 4;
+      const rows = getAllRows();
+      const dir = th.dataset.dir = th.dataset.dir === 'asc' ? 'desc' : 'asc';
+      rows.sort((a,b) => {
+        const av = parseFloat(a.children[idx].dataset.price || a.children[idx].innerText.replace(/[+$,%]/g,'')) || 0;
+        const bv = parseFloat(b.children[idx].dataset.price || b.children[idx].innerText.replace(/[+$,%]/g,'')) || 0;
+        return dir === 'asc' ? av - bv : bv - av;
+      });
+      rows.forEach(r => tableBody.appendChild(r));
+      applyFilters();
+    });
+  });
+
+  // Search / filter listeners
+  searchInput.addEventListener('input', applyFilters);
+  sectorFilter.addEventListener('change', applyFilters);
+
+  // Pagination
+  prevBtn.addEventListener('click', () => { currentPage--; paginate(); });
+  nextBtn.addEventListener('click', () => { currentPage++; paginate(); });
+
+  // Initial mark all as visible, then paginate
+  getAllRows().forEach(tr => tr.dataset.visible = '1');
+  paginate();
+
+  // Trade modal wiring
+  const tradeModal = document.getElementById('tradeModal');
+  tradeModal.addEventListener('show.bs.modal', (event) => {
+    const btn = event.relatedTarget;
+    const symbol = btn.getAttribute('data-symbol');
+    const name = btn.getAttribute('data-name');
+    const price = btn.getAttribute('data-price');
+
+    document.getElementById('orderSymbol').value = symbol;
+    document.getElementById('orderName').value = name;
+    document.getElementById('orderPrice').value = parseFloat(price).toFixed(2);
+  });
+
+  // Limit toggle
+  const limitToggle = document.getElementById('limitToggle');
+  const limitGroup = document.getElementById('limitGroup');
+  limitToggle.addEventListener('change', () => {
+    limitGroup.classList.toggle('d-none', !limitToggle.checked);
+  });
+
+  // Fake submit handler (replace with fetch to backend endpoint)
+  document.getElementById('orderForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const payload = {
+      symbol: document.getElementById('orderSymbol').value,
+      name: document.getElementById('orderName').value,
+      side: document.getElementById('orderSide').value,
+      qty: parseInt(document.getElementById('orderQty').value, 10),
+      limit: limitToggle.checked ? parseFloat(document.getElementById('limitPrice').value) : null
+    };
+    // Example: POST to '/api/orders' with JSON
+    // fetch('/api/orders', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) })
+    //   .then(r => r.json()).then(() => bootstrap.Modal.getInstance(tradeModal).hide());
+
+    // For now, just close the modal
+    const modal = bootstrap.Modal.getInstance(tradeModal);
+    if (modal) modal.hide();
+  });
+})();
+</script>
+{% endblock %}
