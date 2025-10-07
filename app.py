@@ -79,10 +79,14 @@ class stock_orders(db.Model):
 
 class Stocks(db.Model):  # Stock model for stock data
     id = db.Column(db.Integer, primary_key=True)
-    ticker = db.Column(db.String(4), unique=True, nullable=False)
+    ticker = db.Column(db.String(5), unique=True, nullable=False)
     company_name = db.Column(db.String(100), nullable=False)
-    is_active = db.Column(db.Boolean)
     initial_price = db.Column(db.Float, nullable=False)
+    mu = db.Column(db.Float, default=0.05)
+    sigma = db.Column(db.Float, default=0.20)
+    max_step_pct = db.Column(db.Float, default=1.0)
+    volume = db.Column(db.Integer, default=100000)
+    is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Market_schdule(db.Model):  # Market schedule model
@@ -372,7 +376,7 @@ def update_user(user_id):
     return redirect(url_for('dashboard'))
 
 @app.route('/availablestock')
-def available_stocks():
+def availablestock():
 
     stocks = Stocks.query.filter_by(is_active=True).all()
 
@@ -404,11 +408,42 @@ def admin_required(view_func):
     return wrapper
 
 # --- ADMIN PANEL ---
-@app.route("/adminpanel")
+@app.route("/adminpanel", methods=["GET", "POST"])
 @login_required
 @admin_required
 def adminpanel():
-    return render_template("adminpanel.html")
+    if request.method == 'POST':
+        company_name = request.form.get('company_name')
+        ticker = request.form.get('ticker')
+        initial_price = request.form.get('initial_price')
+        volume = request.form.get('volume')
+        mu = request.form.get('mu')
+        sigma = request.form.get('sigma')
+        max_step_pct = request.form.get('max_step_pct')
+
+        new_stock = Stocks(
+            ticker=ticker,
+            company_name=company_name,
+            initial_price=initial_price,
+            volume=volume,
+            mu=mu,
+            sigma=sigma,
+            max_step_pct=max_step_pct,
+            is_active=True 
+        )
+
+        try:
+            db.session.add(new_stock)
+            db.session.commit()
+            flash(f"Stock {ticker} added successfully!", "success")
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Error adding stock: {e}", "danger")
+
+        return redirect(url_for('adminpanel'))
+    
+    stocks = Stocks.query.all()
+    return render_template('adminpanel.html', stocks=stocks)
 
 # --- ADMIN SETTINGS (lists users + accounts) ---
 @app.route("/adminsettings", methods=["GET"])
