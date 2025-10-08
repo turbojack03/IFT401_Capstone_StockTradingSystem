@@ -2,15 +2,15 @@
 {% block title %}dashboard{% endblock %}
 {% block content %}
 {% with messages = get_flashed_messages(with_categories=true) %}
-  {% if messages %}
-    <div class="flash-messages">
-      {% for category, message in messages %}
-        <div class="alert alert-{{ category }}">
-          {{ message }}
-        </div>
-      {% endfor %}
-    </div>
-  {% endif %}
+{% if messages %}
+<div class="flash-messages">
+  {% for category, message in messages %}
+  <div class="alert alert-{{ category }}">
+    {{ message }}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
 {% endwith %}
 <container class=".container.mt-4">
 
@@ -73,27 +73,16 @@
             </tr>
           </thead>
           <tbody>
+            {% for stock in stocks %}
             <tr>
-              <th scope="row">1</th>
-              <td>Mark</td>
-              <td>Otto</td>
-              <td>@mdo</td>
-              <td>Mark</td>
-              <td>Mark</td>
-              <td>Mark</td>
+              <td>{{ stock.symbol }}</td>
+              <td>{{ stock.name }}</td>
+              <td>${{ "%.2f"|format(stock.price) }}</td>
+              <td>{{ "%.2f"|format(stock.change) }}%</td>
+              <td>{{ stock.volume }}</td>
+              <td>{{ stock.market_cap }}</td>
             </tr>
-            <tr>
-              <th scope="row">2</th>
-              <td>Jacob</td>
-              <td>Thornton</td>
-              <td>@fat</td>
-            </tr>
-            <tr>
-              <th scope="row">3</th>
-              <td>John</td>
-              <td>Doe</td>
-              <td>@social</td>
-            </tr>
+            {% endfor %}
           </tbody>
         </table>
       </td>
@@ -107,10 +96,11 @@
 
           <div style="text-align:center;">
             <button type="button" id="btnBuy" style="width: 300px; height:30px" onclick="setBuySell('BUY')">Buy</button>
-            <button type="button" id="btnSell" style="width: 300px; height:30px" onclick="setBuySell('SELL')">Sell</button>
+            <button type="button" id="btnSell" style="width: 300px; height:30px"
+              onclick="setBuySell('SELL')">Sell</button>
             <input type="hidden" name="buy_or_sell" id="buy_or_sell" required>
-          </div>          
-          
+          </div>
+
           <div class="mb-3">
             <label for="stockSymbol" class="form-label">Stock Symbol:</label>
             <input type="text" name="stockSymbol" id="stockSymbol" required>
