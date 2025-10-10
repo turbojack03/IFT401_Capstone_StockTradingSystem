@@ -172,7 +172,7 @@ def register():
         db.session.add(new_user)
         db.session.commit()
         flash('Registration successful! Please log in.', 'success')
-        return redirect(url_for('login'))
+        return redirect(url_for('dashboard'))
 
     return render_template('register.html')
 
@@ -360,14 +360,25 @@ def add_user():
     flash(f'User {username} added successfully!', 'success')
     return redirect(url_for('dashboard'))
 
-@app.route('/delete_user/<int:user_id>')
+
+@app.route("/delete_user/<int:user_id>", methods=["POST"])
 @login_required
 def delete_user(user_id):
     user = User.query.get_or_404(user_id)
-    db.session.delete(user)
-    db.session.commit()
-    flash(f'User {user.username} deleted successfully!', 'success')
-    return redirect(url_for('dashboard'))
+
+    if user.id == current_user.id:
+        flash("You cannot delete your own account.", "danger")
+        return redirect(url_for("adminsettings"))
+
+    try:
+        db.session.delete(user)
+        db.session.commit()
+        flash("User deleted successfully.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Failed to delete user: {e}", "danger")
+
+    return redirect(url_for("adminsettings"))
 
 @app.route('/read_user/<int:user_id>')
 @login_required
@@ -543,6 +554,22 @@ def cancel_order(order_id):
         flash(f"Failed to cancel order: {e}", "danger")
 
     return redirect(url_for("portfolio"))
+
+@app.route("/delete_stock/<int:stock_id>", methods=["POST"])
+@login_required
+def delete_stock(stock_id):
+    stock = Stocks.query.get_or_404(stock_id)
+
+    try:
+        db.session.delete(stock)
+        db.session.commit()
+        flash("Stock deleted successfully.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Failed to delete stock: {e}", "danger")
+
+    return redirect(url_for("adminpanel"))
+
 
 @app.route("/update_cash", methods=["POST"])
 @login_required

@@ -270,8 +270,12 @@
                                         <td>{{ "%.1f"|format(stock.max_step_pct if stock.max_step_pct else 1.0) }}%</td>
                                         <td><button class="update-rate-btn"
                                                 data-ticker="{{ stock.ticker }}">Update</button></td>
-                                        <td><button class="edit-stock-btn"
-                                                data-ticker="{{ stock.ticker }}">Edit</button></td>
+                                        <td>
+                                            <form method="POST"
+                                                action="{{ url_for('delete_stock', stock_id=stock.id) }}">
+                                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                            </form>
+                                        </td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>

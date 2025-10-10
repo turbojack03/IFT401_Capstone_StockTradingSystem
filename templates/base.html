@@ -15,13 +15,9 @@
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
 
-
-
       <a class="navbar-brand" href="{{ url_for('dashboard') }}">Bamboo StockSim</a>
-
       <img src="{{ url_for('frontend_files', filename='bamboo2.png') }}" alt="Bamboo2"
         style="height:30px; width:auto; margin-right:10px;">
-
       </a>
 
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -29,61 +25,68 @@
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav">
+          {% if current_user.is_authenticated and current_user.role == 'user' %}
           <li class="nav-item"><a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a></li>
           <li class="nav-item"><a class="nav-link" href="{{ url_for('portfolio') }}">Portfolio</a></li>
           <li class="nav-item"><a class="nav-link" href="{{ url_for('availablestock') }}">Available stock</a></li>
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown"
-              aria-expanded="false">
-              Profile
-            </a>
-            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+          {% endif %}
 
-              <li><a class="dropdown-item" href="{{ url_for('profile') }}">View Profile</a></li>
-              <li><a class="dropdown-item" href="{{ url_for('settings') }}">Settings</a></li>
-              <li><a class="dropdown-item" href="{{ url_for('accounthistory') }}">History</a></li>
-              <li><a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a></li>
-            </ul>
-
-          </li>
-
-{% if current_user.is_authenticated and current_user.role == 'admin' %}
-          <li class="nav-item"><a class="nav-link" href="{{ url_for('adminpanel') }}">adminpanel</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ url_for('adminsettings') }}">adminsettings</a></li>
-{% endif %}
+          {% if current_user.is_authenticated and current_user.role == 'admin' %}
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('adminpanel') }}">Admin panel</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('adminsettings') }}">User settings</a></li>
+          {% endif %}
 
         </ul>
       </div>
     </div>
-{% if current_user.is_authenticated %}
-<ul class="navbar-nav ms-auto">
-  <li class="nav-item">
-    <a class="nav-link">
-      <i class="bi bi-wallet2"></i>
-      Balance:
-      <span class="badge bg-success">${{ "%.2f"|format(user_cash) }}</span>
-    </a>
-  </li>
-    <!--  works but need to tweak dispay-->
-      <!--
-  <li class="nav-item">
-    <form method="POST" action="{{ url_for('update_cash') }}" class="d-flex gap-2">
-      <select name="action" class="form-select form-select-sm">
-        <option value="add">Add Cash</option>
-        <option value="withdraw">Withdraw Cash</option>
-      </select>
-      <input type="number" step="0.01" name="amount" class="form-control form-control-sm" placeholder="Amount" required>
-      <button type="submit" class="btn btn-sm btn-primary">Submit</button>
-    </form>
-  </li>-->
-</ul>
-{% endif %}
+    <li class="nav-item dropdown">
+      <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown"
+        aria-expanded="false">
+        Profile
+      </a>
+      <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+        <li><button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#tradeModal">Add funds</button></li>
+        <li><a class="dropdown-item" href="{{ url_for('profile') }}">View Profile</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('settings') }}">Settings</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('accounthistory') }}">History</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a></li>
+      </ul>
+
+    </li>
+    {% if current_user.is_authenticated %}
+    <ul class="navbar-nav ms-auto">
+      <li class="nav-item">
+        <a class="nav-link">
+          <i class="bi bi-wallet2"></i>
+          <span class="badge bg-success">${{ "%.2f"|format(user_cash) }}</span>
+        </a>
+      </li>
+    </ul>
+    {% endif %}
 
   </nav>
+  <div class="modal fade" id="tradeModal" tabindex="-1" aria-labelledby="tradeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <li class="nav-item">
+            <form method="POST" action="{{ url_for('update_cash') }}" class="d-flex gap-2">
+              <select name="action" class="form-select form-select-sm">
+                <option value="add">Add Cash</option>
+                <option value="withdraw">Withdraw Cash</option>
+              </select>
+              <input type="number" step="0.01" name="amount" class="form-control form-control-sm" placeholder="Amount"
+                required>
+              <button type="submit" class="btn btn-sm btn-primary">Submit</button>
+            </form>
+          </li>
+        </div>
+      </div>
+    </div>
+  </div>
 
 
 
-  
   <main class="container mt-4">
     {% block content %}
     <h1>Welcome to Bamboo StockSim!</h1>
