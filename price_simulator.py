@@ -37,7 +37,7 @@ def next_price(price, mu, sigma, cap_pct, dt_seconds=30.0):
     return max(0.01, price*(1.0 + r)), r
 
 # interval seconds is default
-def attach(app, db, Stocks, *, interval_seconds=30.0, verbose=True):
+def attach(app, db, Stocks, Price_ticks, *, interval_seconds=30.0, verbose=True):
     """Return a starter function that will spin up the background thread."""
     stop_event = Event()
     started = {"ok": False}
@@ -55,6 +55,13 @@ def attach(app, db, Stocks, *, interval_seconds=30.0, verbose=True):
             p0 = float(s.initial_price)
             p1, r = next_price(p0, float(s.mu), float(s.sigma), float(s.max_step_pct), dt_seconds=interval_seconds)
             s.initial_price = p1
+
+            tick = Price_ticks(
+                stock_id=s.id,
+                timestamp=datetime.utcnow(),
+                price=p1
+            )
+            db.session.add(tick)
             if verbose:
                 print(f"[{ts}] {s.ticker}: {p0:.2f} -> {p1:.2f} ({r*100:+.2f}%)", flush=True)
         db.session.commit()

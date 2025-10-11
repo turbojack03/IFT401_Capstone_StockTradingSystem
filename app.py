@@ -114,7 +114,7 @@ with app.app_context(): # Create database tables
 # price sim simulator
 import price_simulator
 # change the interval 
-start_simulator = price_simulator.attach(app, db, Stocks, interval_seconds=5.0, verbose=True)
+start_simulator = price_simulator.attach(app, db, Stocks, Price_ticks, interval_seconds=5.0, verbose=True)
 
 _first_time = True
 
@@ -200,20 +200,41 @@ def register():
 @app.route('/', methods=["GET", "POST"])
 @login_required
 def dashboard():
+    account = Accounts.query.filter_by(user_id=current_user.id).first()
+    if not account:
+        flash("No account found for this user.", "danger")
+        return redirect(url_for("dashboard"))
+
     if request.method == "POST":
         stock_symbol = request.form.get("stockSymbol")
-        buy_or_sell = request.form.get("buy_or_sell")
+        buy_or_sell = request.form.get("buy_or_sell").upper()
         order_type = request.form.get("orderType")
-        quantity = request.form.get("quantity")
+        quantity = int(request.form.get("quantity", 0))
 
-        account = Accounts.query.filter_by(user_id=current_user.id).first()
-        if not account:
-            flash("No account found for this user.", "danger")
+        if quantity <= 0:
+            flash("Quantity must be greater than 0.", "danger")
             return redirect(url_for("dashboard"))
 
         stock = Stocks.query.filter_by(ticker=stock_symbol.upper()).first()
         if not stock:
             flash(f"Stock '{stock_symbol}' not found.", "danger")
+            return redirect(url_for("dashboard"))
+
+        latest_tick = Price_ticks.query.filter_by(stock_id=stock.id).order_by(Price_ticks.timestamp.desc()).first()
+        current_price = latest_tick.price if latest_tick else stock.initial_price
+        total_cost = current_price * quantity
+
+        if buy_or_sell == "BUY":
+            if account.cash_balance < total_cost:
+                flash(f"Insufficient balance to buy {quantity} shares of {stock_symbol}.", "danger")
+                return redirect(url_for("dashboard"))
+            account.cash_balance -= total_cost
+            order_status = "Executed"
+        elif buy_or_sell == "SELL":
+            account.cash_balance += total_cost
+            order_status = "Executed"
+        else:
+            flash("Invalid order type.", "danger")
             return redirect(url_for("dashboard"))
 
         try:
@@ -222,39 +243,53 @@ def dashboard():
                 stock_id=stock.id,
                 buy_or_sell=buy_or_sell,
                 order_type=order_type,
-                quantity=int(quantity),
-                status="Pending"
+                quantity=quantity,
+                status=order_status,
+                executed_at=datetime.utcnow()
             )
             db.session.add(new_order)
             db.session.commit()
-            flash("Order submitted successfully!", "success")
+            flash(f"Order {buy_or_sell} {quantity} shares of {stock_symbol} executed at ${current_price:.2f} each.", "success")
         except Exception as e:
             db.session.rollback()
             flash(f"Failed to submit order: {e}", "danger")
 
         return redirect(url_for("dashboard"))
 
-    orders = stock_orders.query.all()
-
-    top_stocks_query = (
-        Stocks.query.filter_by(is_active=True)
-        .order_by(Stocks.volume.desc())
-        .limit(10)
-        .all()
-    )
-
+    top_stocks_query = Stocks.query.filter_by(is_active=True).all()
     top_stocks = []
+
     for s in top_stocks_query:
-        latest_tick = Price_ticks.query.filter_by(stock_id=s.id).order_by(Price_ticks.timestamp.desc()).first()
-        current_price = latest_tick.price if latest_tick else s.initial_price
+        latest_ticks = (
+            Price_ticks.query
+            .filter_by(stock_id=s.id)
+            .order_by(Price_ticks.timestamp.desc())
+            .limit(2)
+            .all()
+        )
+
+        current_price = s.initial_price
+        percent_change = 0.0
+        if latest_ticks:
+            current_price = latest_ticks[0].price
+            if len(latest_ticks) > 1:
+                previous_price = latest_ticks[1].price
+                percent_change = ((current_price - previous_price) / previous_price) * 100
+
+        market_cap = current_price * s.volume
+
         top_stocks.append({
             "symbol": s.ticker,
             "name": s.company_name,
             "price": current_price,
-            "change": 0.0,
+            "change": round(percent_change, 2),
             "volume": s.volume,
-            "market_cap": "-"  
+            "market_cap": f"${market_cap:,.2f}"
         })
+
+    top_stocks = sorted(top_stocks, key=lambda x: x["change"], reverse=True)[:10]
+
+    orders = stock_orders.query.filter_by(account_id=account.id).all()
 
     return render_template("dashboard.html", orders=orders, stocks=top_stocks)
 
