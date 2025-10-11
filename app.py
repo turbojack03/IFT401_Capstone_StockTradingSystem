@@ -17,7 +17,7 @@
 
 
 from pathlib import Path
-from flask import Flask, render_template, redirect, url_for, flash, request, send_from_directory
+from flask import Flask, render_template, redirect, url_for, flash, request, send_from_directory, jsonify
 from flask_bootstrap import Bootstrap5  # or Bootstrap if that's the version you installed
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -25,6 +25,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.dialects.mysql import SET
 from sqlalchemy import text, func , case, cast, Float
 from datetime import datetime
+
 
 
 app = Flask(__name__)
@@ -43,7 +44,8 @@ with app.app_context(): # Create database tables
 #tables
 class Accounts(db.Model):  # Accounts model
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+
     status = db.Column(
         SET("Banned", "Active", "FlaggedAccount"),
         nullable=False,
@@ -51,7 +53,8 @@ class Accounts(db.Model):  # Accounts model
     )
     
     cash_balance = db.Column(db.Float, nullable=False)
-    created_at = db.Column(db.DateTime, db.ForeignKey('user.created_at'))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow) # removed foreign key constraint because it wouldnt let me run app.py idk why
+
     account_number = db.Column(db.String(20), unique=True, nullable=False)
 
 class User(db.Model, UserMixin):
@@ -88,6 +91,7 @@ class Stocks(db.Model):  # Stock model for stock data
     volume = db.Column(db.Integer, default=100000)
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    last_update = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 class Market_schdule(db.Model):  # Market schedule model
     id = db.Column(db.Integer, primary_key=True)
@@ -105,6 +109,23 @@ class Price_ticks(db.Model):  # Price ticks model
 
 with app.app_context(): # Create database tables
     db.create_all()
+
+
+# price sim simulator
+import price_simulator
+# change the interval 
+start_simulator = price_simulator.attach(app, db, Stocks, interval_seconds=5.0, verbose=True)
+
+_first_time = True
+
+@app.before_request
+# will only start once you request something (html, refresh page)
+def _run_once_on_first_request():
+    global _first_time
+    if _first_time:
+        _first_time = False
+        start_simulator()
+
 
 @login_manager.user_loader
 def load_user(user_id):
