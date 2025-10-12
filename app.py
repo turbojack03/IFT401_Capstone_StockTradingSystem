@@ -17,7 +17,7 @@
 
 
 from pathlib import Path
-from flask import Flask, render_template, redirect, url_for, flash, request, send_from_directory
+from flask import Flask, render_template, redirect, url_for, flash, request, send_from_directory, jsonify
 from flask_bootstrap import Bootstrap5  # or Bootstrap if that's the version you installed
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -25,6 +25,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.dialects.mysql import SET
 from sqlalchemy import text, func , case, cast, Float
 from datetime import datetime
+
 
 
 app = Flask(__name__)
@@ -43,7 +44,8 @@ with app.app_context(): # Create database tables
 #tables
 class Accounts(db.Model):  # Accounts model
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+
     status = db.Column(
         SET("Banned", "Active", "FlaggedAccount"),
         nullable=False,
@@ -51,7 +53,8 @@ class Accounts(db.Model):  # Accounts model
     )
     
     cash_balance = db.Column(db.Float, nullable=False)
-    created_at = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow) # removed foreign key constraint because it wouldnt let me run app.py idk why
+
     account_number = db.Column(db.String(20), unique=True, nullable=False)
 
 class User(db.Model, UserMixin):
@@ -79,11 +82,16 @@ class stock_orders(db.Model):
 
 class Stocks(db.Model):  # Stock model for stock data
     id = db.Column(db.Integer, primary_key=True)
-    ticker = db.Column(db.String(4), unique=True, nullable=False)
+    ticker = db.Column(db.String(5), unique=True, nullable=False)
     company_name = db.Column(db.String(100), nullable=False)
-    is_active = db.Column(db.Boolean)
     initial_price = db.Column(db.Float, nullable=False)
+    mu = db.Column(db.Float, default=0.05)
+    sigma = db.Column(db.Float, default=0.20)
+    max_step_pct = db.Column(db.Float, default=1.0)
+    volume = db.Column(db.Integer, default=100000)
+    is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    last_update = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 class Market_schdule(db.Model):  # Market schedule model
     id = db.Column(db.Integer, primary_key=True)
@@ -101,6 +109,23 @@ class Price_ticks(db.Model):  # Price ticks model
 
 with app.app_context(): # Create database tables
     db.create_all()
+
+
+# price sim simulator
+import price_simulator
+# change the interval 
+start_simulator = price_simulator.attach(app, db, Stocks, Price_ticks, interval_seconds=5.0, verbose=True)
+
+_first_time = True
+
+@app.before_request
+# will only start once you request something (html, refresh page)
+def _run_once_on_first_request():
+    global _first_time
+    if _first_time:
+        _first_time = False
+        start_simulator()
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -168,27 +193,48 @@ def register():
         db.session.add(new_user)
         db.session.commit()
         flash('Registration successful! Please log in.', 'success')
-        return redirect(url_for('login'))
+        return redirect(url_for('dashboard'))
 
     return render_template('register.html')
 
 @app.route('/', methods=["GET", "POST"])
 @login_required
 def dashboard():
+    account = Accounts.query.filter_by(user_id=current_user.id).first()
+    if not account:
+        flash("No account found for this user.", "danger")
+        return redirect(url_for("dashboard"))
+
     if request.method == "POST":
         stock_symbol = request.form.get("stockSymbol")
-        buy_or_sell = request.form.get("buy_or_sell")
+        buy_or_sell = request.form.get("buy_or_sell").upper()
         order_type = request.form.get("orderType")
-        quantity = request.form.get("quantity")
+        quantity = int(request.form.get("quantity", 0))
 
-        account = Accounts.query.filter_by(user_id=current_user.id).first()
-        if not account:
-            flash("No account found for this user.", "danger")
+        if quantity <= 0:
+            flash("Quantity must be greater than 0.", "danger")
             return redirect(url_for("dashboard"))
 
         stock = Stocks.query.filter_by(ticker=stock_symbol.upper()).first()
         if not stock:
             flash(f"Stock '{stock_symbol}' not found.", "danger")
+            return redirect(url_for("dashboard"))
+
+        latest_tick = Price_ticks.query.filter_by(stock_id=stock.id).order_by(Price_ticks.timestamp.desc()).first()
+        current_price = latest_tick.price if latest_tick else stock.initial_price
+        total_cost = current_price * quantity
+
+        if buy_or_sell == "BUY":
+            if account.cash_balance < total_cost:
+                flash(f"Insufficient balance to buy {quantity} shares of {stock_symbol}.", "danger")
+                return redirect(url_for("dashboard"))
+            account.cash_balance -= total_cost
+            order_status = "Executed"
+        elif buy_or_sell == "SELL":
+            account.cash_balance += total_cost
+            order_status = "Executed"
+        else:
+            flash("Invalid order type.", "danger")
             return redirect(url_for("dashboard"))
 
         try:
@@ -197,21 +243,55 @@ def dashboard():
                 stock_id=stock.id,
                 buy_or_sell=buy_or_sell,
                 order_type=order_type,
-                quantity=int(quantity),
-                status="Pending"
+                quantity=quantity,
+                status=order_status,
+                executed_at=datetime.utcnow()
             )
             db.session.add(new_order)
             db.session.commit()
-            flash("Order submitted successfully!", "success")
+            flash(f"Order {buy_or_sell} {quantity} shares of {stock_symbol} executed at ${current_price:.2f} each.", "success")
         except Exception as e:
             db.session.rollback()
             flash(f"Failed to submit order: {e}", "danger")
 
         return redirect(url_for("dashboard"))
 
-    orders = stock_orders.query.all()
-    stocks = Stocks.query.filter_by(is_active=True).all()
-    return render_template("dashboard.html", orders=orders, stocks=stocks)
+    top_stocks_query = Stocks.query.filter_by(is_active=True).all()
+    top_stocks = []
+
+    for s in top_stocks_query:
+        latest_ticks = (
+            Price_ticks.query
+            .filter_by(stock_id=s.id)
+            .order_by(Price_ticks.timestamp.desc())
+            .limit(2)
+            .all()
+        )
+
+        current_price = s.initial_price
+        percent_change = 0.0
+        if latest_ticks:
+            current_price = latest_ticks[0].price
+            if len(latest_ticks) > 1:
+                previous_price = latest_ticks[1].price
+                percent_change = ((current_price - previous_price) / previous_price) * 100
+
+        market_cap = current_price * s.volume
+
+        top_stocks.append({
+            "symbol": s.ticker,
+            "name": s.company_name,
+            "price": current_price,
+            "change": round(percent_change, 2),
+            "volume": s.volume,
+            "market_cap": f"${market_cap:,.2f}"
+        })
+
+    top_stocks = sorted(top_stocks, key=lambda x: x["change"], reverse=True)[:10]
+
+    orders = stock_orders.query.filter_by(account_id=account.id).all()
+
+    return render_template("dashboard.html", orders=orders, stocks=top_stocks)
 
 @app.route("/portfolio")
 @login_required
@@ -219,68 +299,68 @@ def portfolio():
     account = Accounts.query.filter_by(user_id=current_user.id).first()
     if not account:
         flash("No account found for this user.", "warning")
-        return render_template("portfolio.html", portfolio=[])
+        return render_template("portfolio.html", portfolio=[], pending_orders=[])
 
-    orders = (
-        db.session.query(
-            stock_orders.stock_id,
-
-            # Net shares:
-            func.sum(
-                case(
-                    (stock_orders.buy_or_sell == "BUY", cast(stock_orders.quantity, Float)),
-                    else_=-cast(stock_orders.quantity, Float),
-                )
-            ).label("net_quantity"),
-
-            # Net investment (signed):
-            func.sum(
-                case(
-                    (stock_orders.buy_or_sell == "BUY", cast(stock_orders.quantity, Float) * Price_ticks.price),
-                    else_=-cast(stock_orders.quantity, Float) * Price_ticks.price,
-                )
-            ).label("net_investment"),
-        )
-        .join(Price_ticks, Price_ticks.stock_id == stock_orders.stock_id)
-        .filter(stock_orders.account_id == account.id)
-        .group_by(stock_orders.stock_id)
-        .all()
-    )
+    orders = stock_orders.query.filter_by(account_id=account.id).all()
 
     portfolio_data = []
     total_investment = 0
     total_value = 0
+    stock_dict = {}
 
-    for stock_id, net_quantity, net_investment in orders:
-        if net_quantity <= 0:
-            continue 
+    for order in orders:
+        stock = Stocks.query.get(order.stock_id)
+        if not stock:
+            continue
 
-        stock = Stocks.query.get(stock_id)
-        latest_price = (
-            Price_ticks.query.filter_by(stock_id=stock_id)
-            .order_by(Price_ticks.timestamp.desc())
-            .first()
-        )
-        current_price = latest_price.price if latest_price else stock.initial_price
+        latest_tick = Price_ticks.query.filter_by(stock_id=stock.id).order_by(Price_ticks.timestamp.desc()).first()
+        current_price = latest_tick.price if latest_tick else stock.initial_price
 
-        current_value = net_quantity * current_price
-        profit_loss = current_value - net_investment
+        if stock.id not in stock_dict:
+            stock_dict[stock.id] = {
+                "symbol": stock.ticker,
+                "shares": 0,
+                "investment": 0.0,
+                "current_price": current_price
+            }
 
-        total_investment += net_investment
+        qty = order.quantity
+        stock_dict[stock.id]["shares"] += qty if order.buy_or_sell == "BUY" else -qty
+        stock_dict[stock.id]["investment"] += qty * current_price if order.buy_or_sell == "BUY" else -qty * current_price
+
+    for s in stock_dict.values():
+        if s["shares"] <= 0:
+            continue
+        current_value = s["shares"] * s["current_price"]
+        profit_loss = current_value - s["investment"]
+        total_investment += s["investment"]
         total_value += current_value
 
         portfolio_data.append({
-            "symbol": stock.ticker,
-            "current_price": current_price,
-            "shares": net_quantity,
-            "investment": net_investment,
+            "symbol": s["symbol"],
+            "current_price": s["current_price"],
+            "shares": s["shares"],
+            "investment": s["investment"],
             "profit_loss": profit_loss
         })
 
     total_pl = total_value - total_investment
 
-    return render_template("portfolio.html", portfolio=portfolio_data,total_investment=total_investment,total_value=total_value,total_pl=total_pl)
-    
+    pending_orders_query = (
+        stock_orders.query
+        .filter_by(account_id=account.id, status="Pending")
+        .join(Stocks, Stocks.id == stock_orders.stock_id)
+        .add_entity(Stocks)
+        .all()
+    )
+
+    pending_orders = []
+    for order, stock in pending_orders_query:
+        order.stock = stock
+        pending_orders.append(order)
+
+    return render_template("portfolio.html", portfolio=portfolio_data, total_investment=total_investment, total_value=total_value, total_pl=total_pl, pending_orders=pending_orders)
+
 @app.route("/profile")
 @login_required
 def profile():
@@ -336,14 +416,25 @@ def add_user():
     flash(f'User {username} added successfully!', 'success')
     return redirect(url_for('dashboard'))
 
-@app.route('/delete_user/<int:user_id>')
+
+@app.route("/delete_user/<int:user_id>", methods=["POST"])
 @login_required
 def delete_user(user_id):
     user = User.query.get_or_404(user_id)
-    db.session.delete(user)
-    db.session.commit()
-    flash(f'User {user.username} deleted successfully!', 'success')
-    return redirect(url_for('dashboard'))
+
+    if user.id == current_user.id:
+        flash("You cannot delete your own account.", "danger")
+        return redirect(url_for("adminsettings"))
+
+    try:
+        db.session.delete(user)
+        db.session.commit()
+        flash("User deleted successfully.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Failed to delete user: {e}", "danger")
+
+    return redirect(url_for("adminsettings"))
 
 @app.route('/read_user/<int:user_id>')
 @login_required
@@ -371,6 +462,24 @@ def update_user(user_id):
     flash(f'User {username} updated successfully!', 'success')
     return redirect(url_for('dashboard'))
 
+@app.route('/availablestock')
+def availablestock():
+
+    stocks = Stocks.query.filter_by(is_active=True).all()
+
+    stock_list = []
+    for s in stocks:
+        stock_list.append({
+            'symbol': s.ticker,
+            'name': s.company_name,
+            'price': s.initial_price,
+            'change': 0.0,
+            'percent': 0.0,
+            'market_cap': '-',
+            'volume': '-',
+            'sector': '' 
+        })
+    return render_template('availablestock.html', stocks=stock_list)
 
 
 # ---- Admin gate ----
@@ -386,11 +495,42 @@ def admin_required(view_func):
     return wrapper
 
 # --- ADMIN PANEL ---
-@app.route("/adminpanel")
+@app.route("/adminpanel", methods=["GET", "POST"])
 @login_required
 @admin_required
 def adminpanel():
-    return render_template("adminpanel.html")
+    if request.method == 'POST':
+        company_name = request.form.get('company_name')
+        ticker = request.form.get('ticker')
+        initial_price = request.form.get('initial_price')
+        volume = request.form.get('volume')
+        mu = request.form.get('mu')
+        sigma = request.form.get('sigma')
+        max_step_pct = request.form.get('max_step_pct')
+
+        new_stock = Stocks(
+            ticker=ticker,
+            company_name=company_name,
+            initial_price=initial_price,
+            volume=volume,
+            mu=mu,
+            sigma=sigma,
+            max_step_pct=max_step_pct,
+            is_active=True 
+        )
+
+        try:
+            db.session.add(new_stock)
+            db.session.commit()
+            flash(f"Stock {ticker} added successfully!", "success")
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Error adding stock: {e}", "danger")
+
+        return redirect(url_for('adminpanel'))
+    
+    stocks = Stocks.query.all()
+    return render_template('adminpanel.html', stocks=stocks)
 
 # --- ADMIN SETTINGS (lists users + accounts) ---
 @app.route("/adminsettings", methods=["GET"])
@@ -451,9 +591,73 @@ def admin_update_user(user_id):
 
     return redirect(url_for("adminsettings"))
 
+@app.route("/cancel_order/<int:order_id>", methods=["POST"])
+@login_required
+def cancel_order(order_id):
+    order = stock_orders.query.get_or_404(order_id)
+    account = Accounts.query.filter_by(user_id=current_user.id).first()
+
+    if order.account_id != account.id or order.status != "Pending":
+        flash("Cannot cancel this order.", "danger")
+        return redirect(url_for("portfolio"))
+
+    try:
+        db.session.delete(order)
+        db.session.commit()
+        flash("Pending order cancelled successfully.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Failed to cancel order: {e}", "danger")
+
+    return redirect(url_for("portfolio"))
+
+@app.route("/delete_stock/<int:stock_id>", methods=["POST"])
+@login_required
+def delete_stock(stock_id):
+    stock = Stocks.query.get_or_404(stock_id)
+
+    try:
+        db.session.delete(stock)
+        db.session.commit()
+        flash("Stock deleted successfully.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Failed to delete stock: {e}", "danger")
+
+    return redirect(url_for("adminpanel"))
 
 
-
+@app.route("/update_cash", methods=["POST"])
+@login_required
+def update_cash():
+    account = Accounts.query.filter_by(user_id=current_user.id).first()
+    if not account:
+        flash("No account found.", "danger")
+        return redirect(url_for("dashboard"))
+    
+    action = request.form.get("action")
+    amount = request.form.get("amount")
+    
+    try:
+        amount = float(amount)
+        if amount <= 0:
+            raise ValueError("Amount must be positive")
+        
+        if action == "withdraw":
+            if amount > account.cash_balance:
+                flash("Insufficient balance.", "danger")
+                return redirect(url_for("dashboard"))
+            account.cash_balance -= amount
+        else: 
+            account.cash_balance += amount
+        
+        db.session.commit()
+        flash(f"Successfully {action}ed ${amount:.2f}.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Failed to update balance: {e}", "danger")
+    
+    return redirect(url_for("dashboard"))
 
 
 

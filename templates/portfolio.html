@@ -1,7 +1,50 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="container mt-5">
+    <h2 class="mb-4">Pending Transactions</h2>
+
+    {% if pending_orders %}
+    <table class="table table-hover table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th scope="col">Stock</th>
+                <th scope="col">Order Type</th>
+                <th scope="col">Buy/Sell</th>
+                <th scope="col">Quantity</th>
+                <th scope="col">Status</th>
+                <th scope="col">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in pending_orders %}
+            <tr>
+                <td>{{ order.stock.ticker }}</td>
+                <td>{{ order.order_type }}</td>
+                <td>{{ order.buy_or_sell }}</td>
+                <td>{{ order.quantity }}</td>
+                <td>{{ order.status }}</td>
+                <td>
+                    <form method="POST" action="{{ url_for('cancel_order', order_id=order.id) }}">
+                        <button type="submit" class="btn btn-sm btn-danger">Cancel</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="text-muted">No pending transactions.</p>
+    {% endif %}
+
     <h2 class="mb-4">My Portfolio</h2>
+
+    <div class="mt-4 d-flex gap-4">
+        <h5>Total Investment: ${{ "%.2f"|format(total_investment) }}</h5>
+        <h5>Total Value: ${{ "%.2f"|format(total_value) }}</h5>
+        <h5 class="{% if total_pl >= 0 %}text-success{% else %}text-danger{% endif %}">
+            Net P/L: ${{ "%.2f"|format(total_pl) }}
+        </h5>
+    </div>
 
     {% if portfolio %}
     <table class="table table-hover table-bordered">
@@ -17,7 +60,7 @@
         <tbody>
             {% for stock in portfolio %}
             <tr>
-                <td scope="col">{{ stock.symbol }}</td>
+                <td>{{ stock.symbol }}</td>
                 <td>${{ "%.2f"|format(stock.current_price) }}</td>
                 <td>{{ "%.2f"|format(stock.shares) }}</td>
                 <td>${{ "%.2f"|format(stock.investment) }}</td>
@@ -28,15 +71,6 @@
             {% endfor %}
         </tbody>
     </table>
-
-    <div class="mt-4">
-        <h5>Total Investment: ${{ "%.2f"|format(total_investment) }}</h5>
-        <h5>Total Value: ${{ "%.2f"|format(total_value) }}</h5>
-        <h5 class="{% if total_pl >= 0 %}text-success{% else %}text-danger{% endif %}">
-            Net P/L: ${{ "%.2f"|format(total_pl) }}
-        </h5>
-    </div>
-
     {% else %}
     <p class="text-muted">You currently have no stocks in your portfolio.</p>
     {% endif %}
