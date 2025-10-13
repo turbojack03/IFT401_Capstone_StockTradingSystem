@@ -17,7 +17,7 @@
 
 
 from pathlib import Path
-from flask import Flask, render_template, redirect, url_for, flash, request, send_from_directory, jsonify
+from flask import Flask, render_template, redirect, url_for, flash, request, send_from_directory, jsonify, render_template_string
 from flask_bootstrap import Bootstrap5  # or Bootstrap if that's the version you installed
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -25,7 +25,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.dialects.mysql import SET
 from sqlalchemy import text, func , case, cast, Float
 from datetime import datetime
-
+import plotly.express as px
+import pandas as pd
 
 
 app = Flask(__name__)
@@ -203,11 +204,11 @@ def dashboard():
     account = Accounts.query.filter_by(user_id=current_user.id).first()
     if not account:
         flash("No account found for this user.", "danger")
-        return redirect(url_for("dashboard"))
+        return redirect(url_for('dashboard'))  
 
     if request.method == "POST":
         stock_symbol = request.form.get("stockSymbol")
-        buy_or_sell = request.form.get("buy_or_sell").upper()
+        buy_or_sell = request.form.get("buy_or_sell", "").upper()
         order_type = request.form.get("orderType")
         quantity = int(request.form.get("quantity", 0))
 
@@ -229,10 +230,10 @@ def dashboard():
                 flash(f"Insufficient balance to buy {quantity} shares of {stock_symbol}.", "danger")
                 return redirect(url_for("dashboard"))
             account.cash_balance -= total_cost
-            order_status = "Executed"
+            order_status = "Pending"
         elif buy_or_sell == "SELL":
             account.cash_balance += total_cost
-            order_status = "Executed"
+            order_status = "Pending"
         else:
             flash("Invalid order type.", "danger")
             return redirect(url_for("dashboard"))
@@ -256,6 +257,29 @@ def dashboard():
 
         return redirect(url_for("dashboard"))
 
+
+    selected_ticker = request.args.get("selected_stock", default=None)
+    selected_stock = None
+    selected_stock_prices = []
+
+    if selected_ticker:
+        selected_stock = Stocks.query.filter_by(ticker=selected_ticker).first()
+        if selected_stock:
+            selected_stock_prices_raw = (
+                Price_ticks.query
+                .filter_by(stock_id=selected_stock.id)
+                .order_by(Price_ticks.timestamp.asc())
+                .all()
+            )
+
+            selected_stock_prices = [
+                {
+                    "timestamp": tick.timestamp.isoformat(), 
+                    "price": tick.price
+                }
+                for tick in selected_stock_prices_raw
+            ]
+
     top_stocks_query = Stocks.query.filter_by(is_active=True).all()
     top_stocks = []
 
@@ -274,7 +298,8 @@ def dashboard():
             current_price = latest_ticks[0].price
             if len(latest_ticks) > 1:
                 previous_price = latest_ticks[1].price
-                percent_change = ((current_price - previous_price) / previous_price) * 100
+                if previous_price != 0:
+                    percent_change = ((current_price - previous_price) / previous_price) * 100
 
         market_cap = current_price * s.volume
 
@@ -291,7 +316,7 @@ def dashboard():
 
     orders = stock_orders.query.filter_by(account_id=account.id).all()
 
-    return render_template("dashboard.html", orders=orders, stocks=top_stocks)
+    return render_template("dashboard.html", orders=orders, stocks=top_stocks, selected_stock=selected_stock, selected_stock_prices=selected_stock_prices)
 
 @app.route("/portfolio")
 @login_required
@@ -660,7 +685,28 @@ def update_cash():
     return redirect(url_for("dashboard"))
 
 
+@app.route("/dashboard/<ticker>")
+def stock_chart(ticker):
+    df = pd.read_sql(f"""
+        SELECT sp.timestamp, sp.price
+        FROM stock_prices sp
+        JOIN stocks s ON s.id = sp.stock_id
+        WHERE s.ticker = '{ticker}'
+        ORDER BY sp.timestamp
+    """, db.engine)
 
+    fig = px.line(df, x='timestamp', y='price', title=f'{ticker} Stock Price Over Time')
+    graph_html = fig.to_html(full_html=False)
+
+    return render_template_string("""
+        <html>
+            <head><title>{{ ticker }} Chart</title></head>
+            <body>
+                <h1>{{ ticker }} Price Chart</h1>
+                {{ graph|safe }}
+            </body>
+        </html>
+    """, graph=graph_html, ticker=ticker)
 
 
 
