@@ -432,8 +432,13 @@ def changepassword():
             db.session.commit()
             logout_user()
             return redirect(url_for("login"))
-        else:
+        if new != confrim:
+            flash("Passwords must match!", "warning")
             return render_template("changepassword.html")
+        else:
+            
+            return render_template("changepassword.html")
+            
     return render_template("changepassword.html")
 
 @app.route("/accounthistory")
@@ -444,7 +449,9 @@ def accounthistory():
 @app.route("/settings")
 @login_required
 def settings():
-    return render_template("settings.html")
+    market = Market_schdule.query.first()
+    open_now = is_market_open()
+    return render_template("settings.html", market=market, open_now=open_now)
 
 #CRUD routes
 @app.route('/add_user', methods=['POST'])
