@@ -198,15 +198,43 @@ def register():
 
     return render_template('register.html')
 
+
+def is_market_open(now=None):
+    market = Market_schdule.query.first()
+    if not market:
+        return True
+    if market.is_holiday:
+        return False
+    
+    now = now or datetime.now()
+    t = now.time()
+
+    if market.open_time <= market.close_time:
+        return market.open_time <= t <= market.close_time
+    else:
+        return t >= market.open_time or t <= market.close_time
+
 @app.route('/', methods=["GET", "POST"])
 @login_required
 def dashboard():
     account = Accounts.query.filter_by(user_id=current_user.id).first()
     if not account:
+        account = Accounts(
+            user_id=current_user.id,
+            status="Active",
+            cash_balance=0.0,
+            account_number=f"ACCT-{current_user.id:06d}",
+        )
+        db.session.add(account)
+        db.session.commit()
         flash("No account found for this user.", "danger")
-        return redirect(url_for('dashboard'))  
+        return redirect(url_for('login'))  
 
     if request.method == "POST":
+        if not is_market_open():
+            flash("Market is closed.", "warning")
+            return redirect(url_for("dashboard"))
+        
         stock_symbol = request.form.get("stockSymbol")
         buy_or_sell = request.form.get("buy_or_sell", "").upper()
         order_type = request.form.get("orderType")
@@ -551,11 +579,11 @@ def adminpanel():
         except Exception as e:
             db.session.rollback()
             flash(f"Error adding stock: {e}", "danger")
-
-        return redirect(url_for('adminpanel'))
+    
     
     stocks = Stocks.query.all()
     return render_template('adminpanel.html', stocks=stocks)
+
 
 # --- ADMIN SETTINGS (lists users + accounts) ---
 @app.route("/adminsettings", methods=["GET"])

@@ -26,6 +26,7 @@
                         <div class="card">
                             <h3>Create New Stock</h3>
                             <form method="POST" action="{{ url_for('adminpanel') }}">
+                                
                                 <label for="company_name">Company Name:</label>
                                 <input type="text" id="company_name" name="company_name" required>
 
@@ -146,16 +147,17 @@
                         </div>
                         <div class="card">
                             <h3>Market Schedule & Configuration</h3>
-                            <form id="market-config-form">
+                            <form id="market-config-form" method="POST" action="{{ url_for('update_market_hours')}}">
+                                
                                 <h4>Trading Hours</h4>
                                 <div class="flex-group">
                                     <div>
                                         <label for="open_time">Open Time:</label>
-                                        <input type="time" id="open_time" required value="09:30">
+                                        <input type="time" id="open_time" name="open_time" required value="{{ (market.open_time|string)[:5] if market and market.open_time else '9:30'}}">
                                     </div>
                                     <div>
                                         <label for="close_time">Close Time:</label>
-                                        <input type="time" id="close_time" required value="16:00">
+                                        <input type="time" id="close_time" name="close_time" required value="{{ (market.close_time|string)[:5] if market and market.close_time else '16:00'}}">
                                     </div>
                                 </div>
 
