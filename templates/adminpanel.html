@@ -26,7 +26,7 @@
                         <div class="card">
                             <h3>Create New Stock</h3>
                             <form method="POST" action="{{ url_for('adminpanel') }}">
-                                
+
                                 <label for="company_name">Company Name:</label>
                                 <input type="text" id="company_name" name="company_name" required>
 
@@ -148,80 +148,33 @@
                         <div class="card">
                             <h3>Market Schedule & Configuration</h3>
                             <form id="market-config-form" method="POST">
-                                
                                 <h4>Trading Hours</h4>
                                 <div class="flex-group">
                                     <div>
                                         <label for="open_time">Open Time:</label>
-                                        <input type="time" id="open_time" name="open_time" required value="{{ (market.open_time|string)[:5] if market and market.open_time else '9:30'}}">
+                                        <input type="time" id="open_time" name="open_time" required
+                                            value="{{ market.open_time.strftime('%H:%M') if market and market.open_time else '09:30' }}">
                                     </div>
                                     <div>
                                         <label for="close_time">Close Time:</label>
-                                        <input type="time" id="close_time" name="close_time" required value="{{ (market.close_time|string)[:5] if market and market.close_time else '16:00'}}">
+                                        <input type="time" id="close_time" name="close_time" required
+                                            value="{{ market.close_time.strftime('%H:%M') if market and market.close_time else '16:00' }}">
                                     </div>
                                 </div>
 
                                 <h4>Trading Days (Check to Open)</h4>
                                 <div id="open-days-checkboxes" style="margin-bottom: 15px;">
+                                    {% set open_days = market.open_days.split(',') if market and market.open_days else
+                                    [] %}
+                                    {% for day_num, day_name in [(0, 'Sun'), (1, 'Mon'), (2, 'Tue'), (3, 'Wed'), (4,
+                                    'Thu'), (5, 'Fri'), (6, 'Sat')] %}
                                     <label style="margin-right: 15px;">
-                                        <input type="checkbox" name="open_day" value="0">
-                                        Sun
+                                        <input type="checkbox" name="open_day" value="{{ day_num }}" {% if
+                                            day_num|string in open_days %}checked{% endif %}>
+                                        {{ day_name }}
                                     </label>
-                                    <label style="margin-right: 15px;">
-                                        <input type="checkbox" name="open_day" value="1" checked>
-                                        Mon
-                                    </label>
-                                    <label style="margin-right: 15px;">
-                                        <input type="checkbox" name="open_day" value="2" checked>
-                                        Tue
-                                    </label>
-                                    <label style="margin-right: 15px;">
-                                        <input type="checkbox" name="open_day" value="3" checked>
-                                        Wed
-                                    </label>
-                                    <label style="margin-right: 15px;">
-                                        <input type="checkbox" name="open_day" value="4" checked>
-                                        Thu
-                                    </label>
-                                    <label style="margin-right: 15px;">
-                                        <input type="checkbox" name="open_day" value="5" checked>
-                                        Fri
-                                    </label>
-                                    <label style="margin-right: 15px;">
-                                        <input type="checkbox" name="open_day" value="6">
-                                        Sat
-                                    </label>
+                                    {% endfor %}
                                 </div>
-
-                                <h4>Tick Configuration (Stock Fluctuation Rate)</h4>
-                                <label for="tick_interval_ms">Tick Interval (ms):</label>
-                                <input type="number" id="tick_interval_ms" min="100" step="100" required value="1000">
-                                <p style="font-size: 0.9em; color: var(--secondary-color);">Note: Default is 1000ms (1
-                                    second)
-                                    per tick simulation.</p>
-
-                                <h4>Holidays & Closures</h4>
-                                <div id="holiday-presets">
-                                    <h5>Common Holidays:</h5>
-                                    <label style="margin-right: 20px;">
-                                        <input type="checkbox" name="holiday_preset" data-date-placeholder="01-01"
-                                            checked>
-                                        New Year's Day
-                                    </label><br>
-                                    <label style="margin-right: 20px;">
-                                        <input type="checkbox" name="holiday_preset" data-date-placeholder="12-25"
-                                            checked>
-                                        Christmas Day
-                                    </label><br>
-                                    <label style="margin-right: 20px;">
-                                        <input type="checkbox" name="holiday_preset" data-date-placeholder="11-28">
-                                        Thanksgiving
-                                    </label>
-                                </div>
-
-                                <h5>Specific Closure Dates (YYYY-MM-DD):</h5>
-                                <textarea id="specific_holidays" rows="3"
-                                    placeholder="2024-11-28, 2025-01-01">2024-12-25, 2025-01-01</textarea>
 
                                 <button type="submit">Save Market Configuration</button>
                             </form>

@@ -24,7 +24,7 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.dialects.mysql import SET
 from sqlalchemy import text, func , case, cast, Float
-from datetime import datetime
+from datetime import datetime, time
 import plotly.express as px
 import pandas as pd
 
@@ -94,11 +94,11 @@ class Stocks(db.Model):  # Stock model for stock data
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_update = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-class Market_schdule(db.Model):  # Market schedule model
+class Market_schedule(db.Model):  # Market schedule model
     id = db.Column(db.Integer, primary_key=True)
-    market_name = db.Column(db.String(100), nullable=False)
     open_time = db.Column(db.Time, nullable=False)
     close_time = db.Column(db.Time, nullable=False)
+    open_days = db.Column(db.String(20))
     is_holiday = db.Column(db.Boolean)
 
 
@@ -200,19 +200,27 @@ def register():
 
 
 def is_market_open(now=None):
-    market = Market_schdule.query.first()
+    market = Market_schedule.query.first()
+    
     if not market:
         return True
+
     if market.is_holiday:
         return False
-    
-    now = now or datetime.now()
-    t = now.time()
 
-    if market.open_time <= market.close_time:
-        return market.open_time <= t <= market.close_time
-    else:
-        return t >= market.open_time or t <= market.close_time
+    now = now or datetime.now()
+    current_time = now.time()
+
+    if not market.open_time or not market.close_time:
+        return True
+
+    open_time = market.open_time
+    close_time = market.close_time
+
+    if open_time <= close_time:
+        return open_time <= current_time <= close_time
+
+    return current_time >= open_time or current_time <= close_time
 
 @app.route('/', methods=["GET", "POST"])
 @login_required
@@ -449,7 +457,7 @@ def accounthistory():
 @app.route("/settings")
 @login_required
 def settings():
-    market = Market_schdule.query.first()
+    market = Market_schedule.query.first()
     open_now = is_market_open()
     return render_template("settings.html", market=market, open_now=open_now)
 
@@ -560,36 +568,59 @@ def admin_required(view_func):
 @admin_required
 def adminpanel():
     if request.method == 'POST':
-        company_name = request.form.get('company_name')
-        ticker = request.form.get('ticker')
-        initial_price = request.form.get('initial_price')
-        volume = request.form.get('volume')
-        mu = request.form.get('mu')
-        sigma = request.form.get('sigma')
-        max_step_pct = request.form.get('max_step_pct')
+        if 'company_name' in request.form:
+            try:
+                new_stock = Stocks(
+                    ticker=request.form.get('ticker'),
+                    company_name=request.form.get('company_name'),
+                    initial_price=request.form.get('initial_price'),
+                    volume=request.form.get('volume'),
+                    mu=request.form.get('mu'),
+                    sigma=request.form.get('sigma'),
+                    max_step_pct=request.form.get('max_step_pct'),
+                    is_active=True
+                )
+                db.session.add(new_stock)
+                db.session.commit()
+                flash(f"Stock {new_stock.ticker} added successfully!", "success")
+            except Exception as e:
+                db.session.rollback()
+                flash(f"Error adding stock: {e}", "danger")
 
-        new_stock = Stocks(
-            ticker=ticker,
-            company_name=company_name,
-            initial_price=initial_price,
-            volume=volume,
-            mu=mu,
-            sigma=sigma,
-            max_step_pct=max_step_pct,
-            is_active=True 
-        )
+        elif 'open_time' in request.form and 'close_time' in request.form:
+            try:
+                open_time_str = request.form.get('open_time') 
+                close_time_str = request.form.get('close_time')
 
-        try:
-            db.session.add(new_stock)
-            db.session.commit()
-            flash(f"Stock {ticker} added successfully!", "success")
-        except Exception as e:
-            db.session.rollback()
-            flash(f"Error adding stock: {e}", "danger")
-    
-    
+                open_hour, open_min = map(int, open_time_str.split(":"))
+                close_hour, close_min = map(int, close_time_str.split(":"))
+
+                open_time_obj = time(open_hour, open_min)
+                close_time_obj = time(close_hour, close_min)
+
+                open_days = request.form.getlist("open_day")
+                open_days_str = ','.join(open_days)
+
+                schedule = Market_schedule.query.first()
+                if not schedule:
+                    schedule = Market_schedule()
+
+                schedule.open_time = open_time_obj
+                schedule.close_time = close_time_obj
+                schedule.open_days = open_days_str
+                schedule.is_holiday = False 
+
+                db.session.add(schedule)
+                db.session.commit()
+                flash("Market schedule updated successfully.", "success")
+            except Exception as e:
+                db.session.rollback()
+                flash(f"Error updating market schedule: {e}", "danger")
+
     stocks = Stocks.query.all()
-    return render_template('adminpanel.html', stocks=stocks)
+    market = Market_schedule.query.first()
+    return render_template('adminpanel.html', stocks=stocks, market=market)
+
 
 
 # --- ADMIN SETTINGS (lists users + accounts) ---
