@@ -166,8 +166,8 @@
                                 <div id="open-days-checkboxes" style="margin-bottom: 15px;">
                                     {% set open_days = market.open_days.split(',') if market and market.open_days else
                                     [] %}
-                                    {% for day_num, day_name in [(0, 'Sun'), (1, 'Mon'), (2, 'Tue'), (3, 'Wed'), (4,
-                                    'Thu'), (5, 'Fri'), (6, 'Sat')] %}
+                                    {% for day_num, day_name in [(0, 'Monday'), (1, 'Tuesday'), (2, 'Wednesday'), (3,
+                                    'Thursday'), (4, 'Friday'), (5, 'Saturday'), (6, 'Sunday')] %}
                                     <label style="margin-right: 15px;">
                                         <input type="checkbox" name="open_day" value="{{ day_num }}" {% if
                                             day_num|string in open_days %}checked{% endif %}>

@@ -27,6 +27,7 @@ from sqlalchemy import text, func , case, cast, Float
 from datetime import datetime, time
 import plotly.express as px
 import pandas as pd
+import holidays
 
 
 app = Flask(__name__)
@@ -205,18 +206,27 @@ def is_market_open(now=None):
     if not market:
         return True
 
-    if market.is_holiday:
-        return False
-
-    now = now or datetime.now()
+    now = datetime.now()
     current_time = now.time()
 
     if not market.open_time or not market.close_time:
         return True
+    
+    today = now.date()
+    holiday = holidays.US(years=today.year)
 
+    if today in holiday:
+        return False
+    
+    current_day = now.weekday() 
+    open_days = [int(d.strip()) for d in market.open_days.split(",")]
+    
+    if current_day not in open_days:
+        return False
+    
     open_time = market.open_time
     close_time = market.close_time
-
+    
     if open_time <= close_time:
         return open_time <= current_time <= close_time
 
@@ -616,6 +626,23 @@ def adminpanel():
             except Exception as e:
                 db.session.rollback()
                 flash(f"Error updating market schedule: {e}", "danger")
+        elif 'force_close' in request.form:
+            try:
+                force_close = request.form.get('force_close')
+                schedule = Market_schedule.query.first()
+
+                if not schedule:
+                    schedule = Market_schedule()
+
+                schedule.open_days = ()
+                
+                db.session.add(schedule)
+                db.session.commit()
+                flash("Market schedule updated successfully.", "success")
+            except Exception as e:
+                db.session.rollback()
+                flash(f"Error updating market schedule: {e}", "danger")
+
 
     stocks = Stocks.query.all()
     market = Market_schedule.query.first()
