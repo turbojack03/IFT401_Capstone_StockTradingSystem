@@ -677,6 +677,38 @@ def adminsettings():
             .order_by(User.id.asc())
             .all()
         )
+
+    from sqlalchemy import desc
+    rows_enriched = []
+    for u, a in rows:
+        orders = (
+            db.session.query(
+                stock_orders.stock_id,
+                stock_orders.buy_or_sell,
+                stock_orders.executed_at,
+                stock_orders.quantity,
+                stock_orders.status,
+            )
+            .filter(stock_orders.account_id == a.id)        # add .filter(stock_ORders.status == "Pending") to limit
+            .order_by(desc(stock_orders.executed_at))       # newest first; NULLs last naturally in MySQL 8
+            .all()
+        )
+
+        # attach a simple list of dicts the template can iterate
+        a_orders = []
+        for o in orders:
+            a_orders.append({
+                "stock_id":    o.stock_id,
+                "buy_or_sell": o.buy_or_sell,
+                "executed_at": o.executed_at,              # can be None for not-yet-executed
+                "quantity":    float(o.quantity or 0),
+                "status":      o.status,
+            })
+
+        setattr(a, "orders", a_orders)  # now available as a.orders in the template
+        rows_enriched.append((u, a))
+
+    rows = rows_enriched
     return render_template("adminsettings.html", rows=rows)
 
 # --- UPDATE (status/cash) ---
