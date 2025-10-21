@@ -84,7 +84,7 @@
           </thead>
           <tbody>
             {% for stock in stocks %}
-            <tr class="table-success" >
+            <tr>
               <td>
                 <a href="{{ url_for('dashboard', selected_stock=stock.symbol) }}"
                   style="text-decoration:none; color:#000;">

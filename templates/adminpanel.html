@@ -240,7 +240,10 @@
                         <div class="card">
                             <h3>Market Status Simulation</h3>
                             <p>Market is currently: <strong>OPEN</strong></p>
-                            <button id="toggle-market-btn">Force Close Market</button>
+                            <form method="POST" 
+                                action="{{ url_for('force_close') }}">
+                                <button type="submit" class="btn btn-sm btn-danger">Force Close Market</button>
+                            </form>
                         </div>
 
                         <!-- ADDED: close RIGHT column and grid -->

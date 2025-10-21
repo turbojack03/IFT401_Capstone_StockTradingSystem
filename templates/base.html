@@ -45,7 +45,8 @@
         Profile
       </a>
       <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-        <li><button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#tradeModal">Add funds</button></li>
+        <li><button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#fundsModal">Add
+            funds</button></li>
         <li><a class="dropdown-item" href="{{ url_for('profile') }}">View Profile</a></li>
         <li><a class="dropdown-item" href="{{ url_for('settings') }}">Settings</a></li>
         <li><a class="dropdown-item" href="{{ url_for('accounthistory') }}">History</a></li>
@@ -65,21 +66,28 @@
     {% endif %}
 
   </nav>
-  <div class="modal fade" id="tradeModal" tabindex="-1" aria-labelledby="tradeModalLabel" aria-hidden="true">
+  <div class="modal fade" id="fundsModal" tabindex="-1" aria-labelledby="fundsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
-          <li class="nav-item">
-            <form method="POST" action="{{ url_for('update_cash') }}" class="d-flex gap-2">
-              <select name="action" class="form-select form-select-sm">
+          <h5 class="modal-title" id="fundsModalLabel">Manage Funds</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form method="POST" action="{{ url_for('update_cash') }}">
+            <div class="mb-3">
+              <label class="form-label">Action</label>
+              <select name="action" class="form-select" required>
                 <option value="add">Add Cash</option>
                 <option value="withdraw">Withdraw Cash</option>
               </select>
-              <input type="number" step="0.01" name="amount" class="form-control form-control-sm" placeholder="Amount"
-                required>
-              <button type="submit" class="btn btn-sm btn-primary">Submit</button>
-            </form>
-          </li>
+            </div>
+            <div class="mb-3">
+              <label for="amount" class="form-label">Amount</label>
+              <input type="number" step="0.01" name="amount" id="amount" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-success w-100">Submit</button>
+          </form>
         </div>
       </div>
     </div>
@@ -103,13 +111,15 @@
     </main>
 
     <footer class="footer mt-auto py-3 bg-dark text-light mt-5">
+      <!--
       <img src="{{ url_for('frontend_files', filename='bamboo.png') }}" alt="Bamboo stalk" class="bamboo left-bamboo">
-
+-->
       <div class="container py-3">
         <p class="text-center mb-0">© 1970 Epic Stock Sim App</p>
       </div>
-
+      <!--
       <img src="{{ url_for('frontend_files', filename='bamboo.png') }}" alt="Bamboo stalk" class="bamboo right-bamboo">
+-->
     </footer>
 
 

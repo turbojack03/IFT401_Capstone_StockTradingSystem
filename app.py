@@ -370,7 +370,7 @@ def portfolio():
     account = Accounts.query.filter_by(user_id=current_user.id).first()
     if not account:
         flash("No account found for this user.", "warning")
-        return render_template("portfolio.html", portfolio=[], pending_orders=[])
+        return render_template("portfolio.html", portfolio=[], pending_orders=[], executed_orders=[])
 
     orders = stock_orders.query.filter_by(account_id=account.id).all()
 
@@ -429,8 +429,137 @@ def portfolio():
     for order, stock in pending_orders_query:
         order.stock = stock
         pending_orders.append(order)
+    
 
-    return render_template("portfolio.html", portfolio=portfolio_data, total_investment=total_investment, total_value=total_value, total_pl=total_pl, pending_orders=pending_orders)
+
+    executed_orders_query = (
+        stock_orders.query
+        .filter_by(account_id=account.id, status="Executed")
+        .join(Stocks, Stocks.id == stock_orders.stock_id)
+        .add_entity(Stocks)
+        .all()
+    )
+
+    executed_orders = []
+    for order, stock in executed_orders_query:
+        order.stock = stock
+        executed_orders.append(order)
+
+    return render_template("portfolio.html", portfolio=portfolio_data, total_investment=total_investment, total_value=total_value, total_pl=total_pl, pending_orders=pending_orders, executed_orders=executed_orders)
+
+
+@app.route('/availablestock', methods=["GET", "POST"])
+@login_required
+def availablestock():
+    account = Accounts.query.filter_by(user_id=current_user.id).first()
+    if not account:
+        # Create a new account if missing
+        account = Accounts(
+            user_id=current_user.id,
+            status="Active",
+            cash_balance=0.0,
+            account_number=f"ACCT-{current_user.id:06d}",
+        )
+        db.session.add(account)
+        db.session.commit()
+        flash("New account created for this user.", "info")
+        return redirect(url_for('availablestock'))
+
+    if request.method == "POST":
+        if not is_market_open():
+            flash("Market is closed.", "warning")
+            return redirect(url_for("availablestock"))
+
+        stock_symbol = request.form.get("stockSymbol")
+        buy_or_sell = request.form.get("buy_or_sell", "").upper()
+        order_type = request.form.get("orderType")
+        quantity = int(request.form.get("quantity", 0))
+
+        if not stock_symbol or quantity <= 0:
+            flash("Invalid trade details.", "danger")
+            return redirect(url_for("availablestock"))
+
+        stock = Stocks.query.filter_by(ticker=stock_symbol).first()
+        if not stock:
+            flash("Stock not found.", "danger")
+            return redirect(url_for("availablestock"))
+
+        latest_tick = (Price_ticks.query.filter_by(stock_id=stock.id).order_by(Price_ticks.timestamp.desc()).first())
+        current_price = latest_tick.price if latest_tick else stock.initial_price
+        total_cost = current_price * quantity
+
+        if buy_or_sell == "BUY":
+            if account.cash_balance < total_cost:
+                flash(f"Insufficient funds to buy {quantity} shares of {stock_symbol}.", "danger")
+                return redirect(url_for("availablestock"))
+            account.cash_balance -= total_cost
+            order_status = "Pending"
+
+        elif buy_or_sell == "SELL":
+            account.cash_balance += total_cost
+            order_status = "Pending"
+
+        else:
+            flash("Invalid transaction type.", "danger")
+            return redirect(url_for("availablestock"))
+
+        try:
+            new_order = stock_orders(
+                account_id=account.id,
+                stock_id=stock.id,
+                buy_or_sell=buy_or_sell,
+                order_type=order_type,
+                quantity=quantity,
+                status=order_status,
+                executed_at=datetime.utcnow(),
+            )
+            db.session.add(new_order)
+            db.session.commit()
+            flash(
+                f"Order submitted: {buy_or_sell} {quantity} shares of {stock_symbol} at ${current_price:.2f}.",
+                "success",
+            )
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Failed to submit order: {e}", "danger")
+
+        return redirect(url_for("availablestock"))
+
+    stocks = Stocks.query.filter_by(is_active=True).all()
+    stock_list = []
+
+    for s in stocks:
+        latest_ticks = (
+            Price_ticks.query.filter_by(stock_id=s.id)
+            .order_by(Price_ticks.timestamp.desc())
+            .limit(2)
+            .all()
+        )
+
+        current_price = s.initial_price
+        percent_change = 0.0
+        if latest_ticks:
+            current_price = latest_ticks[0].price
+            if len(latest_ticks) > 1:
+                previous_price = latest_ticks[1].price
+                if previous_price != 0:
+                    percent_change = ((current_price - previous_price) / previous_price) * 100
+
+        market_cap = current_price * s.volume
+
+        stock_list.append({
+            'symbol': s.ticker,
+            'name': s.company_name,
+            'price': current_price,
+            'change': round(percent_change, 2),
+            'volume': s.volume,
+            'market_cap': f"${market_cap:,.2f}",
+        })
+
+    orders = stock_orders.query.filter_by(account_id=account.id).all()
+
+    return render_template('availablestock.html', stocks=stock_list, orders=orders)
+
 
 @app.route("/profile")
 @login_required
@@ -539,25 +668,6 @@ def update_user(user_id):
     db.session.commit()
     flash(f'User {username} updated successfully!', 'success')
     return redirect(url_for('dashboard'))
-
-@app.route('/availablestock')
-def availablestock():
-
-    stocks = Stocks.query.filter_by(is_active=True).all()
-
-    stock_list = []
-    for s in stocks:
-        stock_list.append({
-            'symbol': s.ticker,
-            'name': s.company_name,
-            'price': s.initial_price,
-            'change': 0.0,
-            'percent': 0.0,
-            'market_cap': '-',
-            'volume': '-',
-            'sector': '' 
-        })
-    return render_template('availablestock.html', stocks=stock_list)
 
 
 # ---- Admin gate ----
@@ -776,6 +886,20 @@ def delete_stock(stock_id):
 
     return redirect(url_for("adminpanel"))
 
+@app.route("/force_close", methods=["POST"])
+@login_required
+def force_close():
+    schedule = Market_schedule.query.first()
+
+    try:
+        schedule.open_days = None
+        db.session.commit()
+        flash("Market close", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Failed to delete close market: {e}", "danger")
+
+    return redirect(url_for("adminpanel"))
 
 @app.route("/update_cash", methods=["POST"])
 @login_required
