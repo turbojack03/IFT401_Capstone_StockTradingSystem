@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Market Schedule{% endblock %}
+{% block content %}
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('frontend_files', filename='adminstyles.css') }}">
+    <title>Market Schedule</title>
+</head>
+
+<body>
+    <div id="app">
+        <main id="content">
+            <div id="adminpanel-content">
+                <h2>Market Schedule & Configuration</h2>
+
+                <div class="card">
+                    <form id="market-config-form" method="POST">
+                        <h4>Trading Hours</h4>
+                        <div class="flex-group">
+                            <div>
+                                <label for="open_time">Open Time:</label>
+                                <input type="time" id="open_time" name="open_time" required
+                                    value="{{ market.open_time.strftime('%H:%M') if market and market.open_time else '09:30' }}">
+                            </div>
+                            <div>
+                                <label for="close_time">Close Time:</label>
+                                <input type="time" id="close_time" name="close_time" required
+                                    value="{{ market.close_time.strftime('%H:%M') if market and market.close_time else '16:00' }}">
+                            </div>
+                        </div>
+
+                        <h4>Trading Days (Check to Open)</h4>
+                        <div id="open-days-checkboxes" style="margin-bottom: 15px;">
+                            {% set open_days = market.open_days.split(',') if market and market.open_days else [] %}
+                            {% for day_num, day_name in [
+                            (0, 'Monday'),
+                            (1, 'Tuesday'),
+                            (2, 'Wednesday'),
+                            (3, 'Thursday'),
+                            (4, 'Friday'),
+                            (5, 'Saturday'),
+                            (6, 'Sunday')
+                            ] %}
+                            <label style="margin-right: 15px;">
+                                <input type="checkbox" name="open_day" value="{{ day_num }}" {% if day_num|string in
+                                    open_days %}checked{% endif %}>
+                                {{ day_name }}
+                            </label>
+                            {% endfor %}
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Save Market Configuration</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h3>
+                        Market Status:
+                        <strong class="{{ 'text-success' if market_status == 'OPEN' else 'text-danger' }}">
+                            {{ market_status }}
+                        </strong>
+                    </h3>
+                    <form method="POST" action="{{ url_for('force_close') }}">
+                        <button type="submit" class="btn btn-danger">Force Close Market</button>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+
+</html>
+{% endblock %}

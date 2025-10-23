@@ -33,6 +33,7 @@
 
           {% if current_user.is_authenticated and current_user.role == 'admin' %}
           <li class="nav-item"><a class="nav-link" href="{{ url_for('adminpanel') }}">Admin panel</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('schedule') }}">Market schedule</a></li>
           <li class="nav-item"><a class="nav-link" href="{{ url_for('adminsettings') }}">User settings</a></li>
           {% endif %}
 
@@ -106,20 +107,20 @@
   <body class="d-flex flex-column min-vh-100">
     <main class="flex-shrink-0">
       <div class="container mt-4">
+          <img src="{{ url_for('frontend_files', filename='bamboo.png') }}" alt="Bamboo stalk" class="bamboo left-bamboo">
+  <img src="{{ url_for('frontend_files', filename='bamboo.png') }}" alt="Bamboo stalk" class="bamboo right-bamboo">
         {% endblock %}
       </div>
     </main>
 
     <footer class="footer mt-auto py-3 bg-dark text-light mt-5">
-      <!--
+      
       <img src="{{ url_for('frontend_files', filename='bamboo.png') }}" alt="Bamboo stalk" class="bamboo left-bamboo">
--->
       <div class="container py-3">
         <p class="text-center mb-0">© 1970 Epic Stock Sim App</p>
       </div>
-      <!--
       <img src="{{ url_for('frontend_files', filename='bamboo.png') }}" alt="Bamboo stalk" class="bamboo right-bamboo">
--->
+
     </footer>
 
 

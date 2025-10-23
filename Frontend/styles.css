@@ -1,26 +1,80 @@
+/* =========================================================
+   BAMBOO DARK THEME (Unified Regular + Admin CSS)
+   Sleek, modern dark interface with bamboo-green accents
+   ========================================================= */
+
+/* ===== Root Variables ===== */
+:root {
+  --bg: #0b0d12;
+  --bg-elev: #131820;
+  --text: #e8f0e9;
+  --muted: #9fb4a3;
+  --primary: #2ecc71; /* Bamboo green */
+  --primary-600: #27ae60;
+  --primary-700: #1e8449;
+  --accent: #34c759; /* iOS green */
+  --danger: #ff3b30;
+  --warning: #ffcc00;
+  --border: #222833;
+  --ring: rgba(46, 204, 113, 0.35);
+  --shadow: 0 10px 25px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.35);
+  --radius: 16px;
+  --radius-sm: 12px;
+  --radius-xs: 10px;
+  --gap: 16px;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
 /* ===== Base Layout ===== */
-body {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Comic Sans MS";
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: var(--font);
   background:
-    radial-gradient(1200px 600px at 90% -10%, rgba(10,132,255,.06), transparent 60%),
-    radial-gradient(900px 500px at -10% 100%, rgba(52,199,89,.06), transparent 60%),
+    radial-gradient(1000px 500px at 80% 0%, rgba(46, 204, 113, 0.1), transparent 70%),
+    radial-gradient(900px 600px at -10% 100%, rgba(46, 204, 113, 0.06), transparent 70%),
     var(--bg);
-  color: #1c1c1e;
+  color: var(--text);
   line-height: 1.6;
-}
-html, body { height: 100%; }
-
-/* ===== HIDDEN NAVBAR LINKS ===== */
-.navbar .nav-link.hidden {
-  color: #212529;   /* same as navbar background */
-  
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
+main {
+  flex: 1;
+  padding: 30px;
+}
+
+/* ===== Navbar ===== */
+.navbar {
+  background: rgba(19, 24, 32, 0.95);
+  border-bottom: 1px solid var(--border);
+  border-radius: 0 0 1rem 1rem;
+  color: var(--primary);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+  padding: 1.2rem 2rem;
+  font-size: 1.1rem;
+  backdrop-filter: blur(10px);
+}
+
+.navbar-brand img {
+  border-radius: 12px;
+  vertical-align: middle;
+}
+
+.navbar .nav-link {
+  color: var(--text);
+  margin-right: 1rem;
+  transition: color 0.2s ease;
+}
+
+.navbar .nav-link:hover {
+  color: var(--primary);
+}
+
+/* ===== Cash Badge ===== */
 .nav-cash {
-  background-color: #198754; /* Bootstrap green */
+  background-color: var(--primary-600);
   color: #fff;
   padding: 4px 10px;
   border-radius: 20px;
@@ -28,228 +82,238 @@ html, body { height: 100%; }
   padding-right: 30px;
 }
 
-main {
-  flex: 1;  /* pushes footer down */
-  padding-left: 30px;
-  padding-right: 30px;
-}
-
-
-
-/* ===== Navbar ===== */
-.navbar {
-  border-radius: 0 0 1rem 1rem; /* Curvy bottom corners */
-  color: rgba(16, 209, 42, 0.671);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  padding-top: 1.5rem;
-  padding-bottom: 1.5rem;
-  font-size: 1.2rem;
-  position: relative; 
-}
-
 /* ===== Footer ===== */
 footer {
   margin-top: auto;
+  background-color: #0f141b;
+  border-top: 1px solid var(--border);
+  padding: 1rem 2rem;
+  color: var(--muted);
+  text-align: center;
 }
 
 /* ===== Headings ===== */
 h1, h2, h3, h4, h5 {
   font-weight: 600;
   letter-spacing: -0.5px;
+  color: var(--text);
+}
+h2 {
+  font-size: clamp(1.6rem, 1.2rem + 1vw, 2rem);
   margin-bottom: 1rem;
 }
 
-/* ===== Forms ===== */
-form {
-  background: linear-gradient(#53f768, #15b830); ;
-  padding: 2rem;
-  border-radius: 1rem;
-  box-shadow: 0 24px 24px rgba(0,0,0,0.06);
-}
-
-input.form-control {
-  border-radius: 0.75rem;
-  border: 1px solid #d2d2d7;
-  padding: 0.75rem 1rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-input.form-control:focus {
-  border-color: #0071e3; /* Apple Blue */
-  box-shadow: 0 0 0 3px rgba(0,113,227,0.3);
-  outline: none;
-}
-
-button.btn {
-  border-radius: 0.75rem;
-  padding: 0.6rem 1.2rem;
-  font-weight: 500;
-  transition: background-color 0.2s, transform 0.2s;
-}
-
-button.btn-primary {
-  filter: brightness(1.02);
-  box-shadow: 0 6px 16px rgba(10,132,255,.30);
-}
-
-button.btn-primary:hover {
-  background-color: #005bb5;
-  transform: translateY(-2px);
-}  
-
 /* ===== Cards ===== */
 .card {
-  border-radius: 1rem;
-  overflow: hidden;
-  border: none;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  box-shadow: 0 8px 20px rgba(46, 204, 113, 0.15);
 }
 
-.container.mt-4 {
-  background-color: rgb(255, 255, 255);
+/* ===== Forms ===== */
+form {
+  display: grid;
+  gap: 1rem;
+  background: rgba(19, 24, 32, 0.9);
+  border: 1px solid var(--border);
+  padding: 2rem;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
 }
 
-/* ===== Tables ===== */
-/* Reminder2self: SWITCH TO BAMBOO LOGO AND NAME BECAUSE BAMBOO GROWS FAST LIKE STOCKS!!!! BIG BRAIN MOMENT */
-/* ===== Bamboo2 logo ===== */
-.navbar-brand img {
-  border-radius: 12px;  /* rounded corners */
-  vertical-align: middle; /* align with text */
-}
-  
-
-
-
-
-
-
-
-
-
-
-/* ===== Bamboo stalks ===== */
-.bamboo {
-    position: fixed;       /* lock to viewport */
-    bottom: 0;             /* always bottom edge */
-    width: auto;
-    height: 30vh;
-    max-height: 250px;
-    z-index: 50;
-    pointer-events: none;  /* so it doesn’t block clicks */
+label {
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin-bottom: 0.4rem;
 }
 
-.left-bamboo {
-    left: 10px;            /* left corner */
-}
-
-.right-bamboo {
-    right: 10px;           /* right corner */
-    transform: scaleX(-1); /* mirror */
-}
-
-
-
-.signup-link:link {
-  color: green;
-  background-color: transparent;
-  text-decoration: none;
-}
-
-.signup-link:visited {
-  color: rgb(8, 117, 13);
-  background-color: transparent;
-  text-decoration: none;
-}
-
-.signup-link:hover {
-  color: rgb(14, 168, 22);
-  background-color: transparent;
-  text-decoration: underline;
-}
-
-.signup-link:active {
-  color: rgb(0, 0, 0);
-  background-color: transparent;
-  text-decoration: underline;
-}
-
-
-
-
-
-
-
-
-
-/* ==== Styles for signup ===== */
-.form-control {
-  font-size: 1.1rem;
+input.form-control,
+input[type="text"],
+input[type="number"],
+input[type="time"],
+textarea,
+select {
+  background: #0f141b;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   padding: 0.75rem 1rem;
-  border-radius: 0.75rem;
-  border: 1px solid #d2d2d7;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.form-label {
-  font-weight: 500;
-  margin-bottom: 0.5rem;
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--ring);
+  outline: none;
 }
 
-.valid-feedback {
-  font-size: 0.9rem;
-  color: #28a745; /* Bootstrap green */
-}
-
-.invalid-feedback {
-  font-size: 0.9rem;
-  color: #dc3545; /* Bootstrap red */
-}
-
-.form-check-input {
-  width: 1.5rem;
-  height: 1.5rem;
-  margin-right: 0.5rem;
-}
-
-
-/* ===== Buy/Sell Buttons ===== */
-.buttonbuy {
-  background-color: #28a745; /* Green */
+/* ===== Buttons ===== */
+button,
+.btn,
+.update-rate-btn,
+#toggle-market-btn {
+  appearance: none;
   border: none;
-  margin-left: 30px;
-  padding-bottom:50px;
-  text-align:center;
-  font-size: 25px;
-  line-height: 50px;
-  font-family:"Comic Sans MS";
-  
+  border-radius: var(--radius-xs);
+  background: linear-gradient(180deg, var(--primary), var(--primary-700));
+  color: #fff;
+  font-weight: 600;
+  padding: 10px 18px;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+  box-shadow: 0 4px 10px rgba(46, 204, 113, 0.25);
 }
-.buttonbuy:hover {
-  background-color: #218838; /* Darker green */
-}
-.buttonbuy:active {
-  background-color: #1e7e34; /* Even darker green */
-}
-.buttonsell {
-  background-color: #dc3545; /* Red */
-  border: none;
-  margin-right: 30px;
-  padding-bottom: 50px;
-  text-align:center;
-  font-size: 25px;
-  line-height: 50px;
-  font-family:"Comic Sans MS";
-  
 
+button:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 6px 16px rgba(46, 204, 113, 0.3);
 }
-.buttonsell:hover {
-  background-color: #c82333; /* Darker red */
+
+button:active {
+  transform: translateY(1px);
 }
-.buttonsell:active {
-  background-color: #bd2130; /* Even darker red */
+
+button.secondary {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+button.danger {
+  background: linear-gradient(180deg, var(--danger), #c8211b);
+  box-shadow: 0 4px 10px rgba(255, 59, 48, 0.25);
+}
+
+/* ===== Buy / Sell Buttons Dark Theme ===== */
+#btnBuy.btn-success {
+    background: linear-gradient(180deg, #2ecc71, #1e8449); /* green gradient */
+    color: #fff;
+    border: none;
+}
+
+#btnBuy.btn-outline-success {
+    background: transparent;
+    border: 1px solid #2ecc71;
+    color: #2ecc71;
+}
+
+#btnSell.btn-danger {
+    background: linear-gradient(180deg, #ff3b30, #c8211b); /* red gradient */
+    color: #fff;
+    border: none;
+}
+
+#btnSell.btn-outline-danger {
+    background: transparent;
+    border: 1px solid #ff3b30;
+    color: #ff3b30;
+}
+
+/* Optional hover effects */
+#btnBuy.btn-success:hover,
+#btnSell.btn-danger:hover {
+    filter: brightness(1.1);
+}
+
+#btnBuy.btn-outline-success:hover {
+    background-color: #2ecc71;
+    color: #fff;
+}
+
+#btnSell.btn-outline-danger:hover {
+    background-color: #ff3b30;
+    color: #fff;
+}
+/* ===== Tables ===== */
+table,
+#fluctuation-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+}
+
+thead {
+  background: rgba(46, 204, 113, 0.08);
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+thead th,
+tbody td {
+  padding: 12px 14px;
+  color: white;
+  border-bottom: 1px solid var(--border);
+}
+
+tbody tr:hover {
+  background: rgba(46, 204, 113, 0.08);
+}
+
+/* ===== Links ===== */
+a {
+  color: var(--primary);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+/* ===== Bamboo Decorations ===== */
+.bamboo {
+  position: fixed;
+  bottom: 0;
+  width: auto;
+  height: 30vh;
+  max-height: 250px;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.left-bamboo {
+  left: 10px;
+}
+
+.right-bamboo {
+  right: 10px;
+  transform: scaleX(-1);
+}
+
+/* ===== Signup Links ===== */
+.signup-link {
+  color: var(--primary);
+  text-decoration: none;
+}
+.signup-link:hover {
+  text-decoration: underline;
+  color: var(--accent);
+}
+
+/* ===== Responsive Tweaks ===== */
+@media (max-width: 640px) {
+  .card {
+    padding: 1rem;
+  }
+  button {
+    width: 100%;
+  }
+  main {
+    padding: 15px;
+  }
 }

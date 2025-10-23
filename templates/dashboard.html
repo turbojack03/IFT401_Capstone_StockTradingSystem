@@ -18,29 +18,53 @@
   <table width="100%" cellspacing="0" cellpadding="8" border="0">
     <tr valign="top">
 
-      <!-- LEFT COLUMN (Sidebar with dropdown + stock list) -->
-      <td width="20%" style="background-color:#2d6a4f; color:white; vertical-align:top;">
-        <h4>Stocks</h4>
+      <td width="30%" style="vertical-align:top; padding:15px;">
+        <h4>Order Ticket</h4>
+        <form method="POST" action="{{ url_for('dashboard') }}">
 
-        <!-- Dropdown -->
-        <div class="dropdown mb-3">
-          <button class="btn btn-light dropdown-toggle w-100" type="button" id="stockCategory" data-bs-toggle="dropdown"
-            aria-expanded="false">
-            Choose Stock
-          </button>
-          <ul class="dropdown-menu" aria-labelledby="stockCategory">
-            <li><a class="dropdown-item" href="#" onclick="loadStocks('tech')">Tech Stocks</a></li>
-            <li><a class="dropdown-item" href="#" onclick="loadStocks('energy')">Energy Stocks</a></li>
-            <li><a class="dropdown-item" href="#" onclick="loadStocks('indexes')">Indexes</a></li>
-          </ul>
-        </div>
+          <div class="mb-3 text-center">
+            <button type="button" id="btnBuy" style="width: 130px;" class="btn btn-outline-success"
+              onclick="setBuySell('BUY')">Buy</button>
+            <button type="button" id="btnSell" style="width: 130px;" class="btn btn-outline-danger"
+              onclick="setBuySell('SELL')">Sell</button>
+            <input type="hidden" name="buy_or_sell" id="buy_or_sell" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="stockSymbol" class="form-label">Stock Symbol:</label>
+            <input type="text" name="stockSymbol" id="stockSymbol" class="form-control"
+              value="{{ selected_stock.symbol if selected_stock else '' }}" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="orderType" class="form-label">Order Type:</label>
+            <select name="orderType" id="orderType" class="form-select" required>
+              <option value="Market">Market</option>
+              <option value="Limit">Limit</option>
+              <option value="Stop">Stop</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="quantity" class="form-label">Quantity:</label>
+            <input type="number" name="quantity" id="quantity" class="form-control" min="1" required>
+          </div>
+
+          <button type="submit" class="btn btn-success w-100">Submit Order</button>
+        </form>
+
+        <script>
+          function setBuySell(type) {
+            document.getElementById("buy_or_sell").value = type;
+            document.getElementById("btnBuy").classList.toggle("btn-success", type === "BUY");
+            document.getElementById("btnBuy").classList.toggle("btn-outline-success", type !== "BUY");
+            document.getElementById("btnSell").classList.toggle("btn-danger", type === "SELL");
+            document.getElementById("btnSell").classList.toggle("btn-outline-danger", type !== "SELL");
+          }
+        </script>
       </td>
 
       <td width="50%">
-        <div class="container">
-          <h3>Main Chart Area</h3>
-          <canvas id="myChart" height="120"></canvas>
-        </div>
 
         {% if selected_stock and selected_stock_prices %}
         <div id="priceChart" style="height:600px;width:600px"></div>
@@ -77,7 +101,7 @@
               <th scope="col">Symbol</th>
               <th scope="col">Name</th>
               <th scope="col">Price</th>
-              <th scope="col">% Change</th>
+              <th scope="col">Change</th>
               <th scope="col">Volume</th>
               <th scope="col">Market Cap</th>
             </tr>
@@ -100,52 +124,6 @@
             {% endfor %}
           </tbody>
         </table>
-      </td>
-
-      <!-- RIGHT COLUMN (Order Ticket) -->
-      <td width="30%" style="background-color:#d8f3dc; vertical-align:top; padding:15px;">
-        <h4>Order Ticket</h4>
-        <form method="POST" action="{{ url_for('dashboard') }}">
-
-          <div class="mb-3 text-center">
-            <button type="button" id="btnBuy" style="width: 130px;" class="btn btn-outline-success"
-              onclick="setBuySell('BUY')">Buy</button>
-            <button type="button" id="btnSell" style="width: 130px;" class="btn btn-outline-danger"
-              onclick="setBuySell('SELL')">Sell</button>
-            <input type="hidden" name="buy_or_sell" id="buy_or_sell" required>
-          </div>
-
-          <div class="mb-3">
-            <label for="stockSymbol" class="form-label">Stock Symbol:</label>
-            <input type="text" name="stockSymbol" id="stockSymbol" class="form-control" required>
-          </div>
-
-          <div class="mb-3">
-            <label for="orderType" class="form-label">Order Type:</label>
-            <select name="orderType" id="orderType" class="form-select" required>
-              <option value="Market">Market</option>
-              <option value="Limit">Limit</option>
-              <option value="Stop">Stop</option>
-            </select>
-          </div>
-
-          <div class="mb-3">
-            <label for="quantity" class="form-label">Quantity:</label>
-            <input type="number" name="quantity" id="quantity" class="form-control" min="1" required>
-          </div>
-
-          <button type="submit" class="btn btn-success w-100">Submit Order</button>
-        </form>
-
-        <script>
-          function setBuySell(type) {
-            document.getElementById("buy_or_sell").value = type;
-            document.getElementById("btnBuy").classList.toggle("btn-success", type === "BUY");
-            document.getElementById("btnBuy").classList.toggle("btn-outline-success", type !== "BUY");
-            document.getElementById("btnSell").classList.toggle("btn-danger", type === "SELL");
-            document.getElementById("btnSell").classList.toggle("btn-outline-danger", type !== "SELL");
-          }
-        </script>
       </td>
     </tr>
   </table>

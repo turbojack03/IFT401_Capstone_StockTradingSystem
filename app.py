@@ -688,76 +688,64 @@ def admin_required(view_func):
 @admin_required
 def adminpanel():
     if request.method == 'POST':
-        if 'company_name' in request.form:
-            try:
-                new_stock = Stocks(
-                    ticker=request.form.get('ticker'),
-                    company_name=request.form.get('company_name'),
-                    initial_price=request.form.get('initial_price'),
-                    volume=request.form.get('volume'),
-                    mu=request.form.get('mu'),
-                    sigma=request.form.get('sigma'),
-                    max_step_pct=request.form.get('max_step_pct'),
-                    is_active=True
-                )
-                db.session.add(new_stock)
-                db.session.commit()
-                flash(f"Stock {new_stock.ticker} added successfully!", "success")
-            except Exception as e:
-                db.session.rollback()
-                flash(f"Error adding stock: {e}", "danger")
-
-        elif 'open_time' in request.form and 'close_time' in request.form:
-            try:
-                open_time_str = request.form.get('open_time') 
-                close_time_str = request.form.get('close_time')
-
-                open_hour, open_min = map(int, open_time_str.split(":"))
-                close_hour, close_min = map(int, close_time_str.split(":"))
-
-                open_time_obj = time(open_hour, open_min)
-                close_time_obj = time(close_hour, close_min)
-
-                open_days = request.form.getlist("open_day")
-                open_days_str = ','.join(open_days)
-
-                schedule = Market_schedule.query.first()
-                if not schedule:
-                    schedule = Market_schedule()
-
-                schedule.open_time = open_time_obj
-                schedule.close_time = close_time_obj
-                schedule.open_days = open_days_str
-                schedule.is_holiday = False 
-
-                db.session.add(schedule)
-                db.session.commit()
-                flash("Market schedule updated successfully.", "success")
-            except Exception as e:
-                db.session.rollback()
-                flash(f"Error updating market schedule: {e}", "danger")
-        elif 'force_close' in request.form:
-            try:
-                force_close = request.form.get('force_close')
-                schedule = Market_schedule.query.first()
-
-                if not schedule:
-                    schedule = Market_schedule()
-
-                schedule.open_days = ()
-                
-                db.session.add(schedule)
-                db.session.commit()
-                flash("Market schedule updated successfully.", "success")
-            except Exception as e:
-                db.session.rollback()
-                flash(f"Error updating market schedule: {e}", "danger")
-
-
+        try:
+            new_stock = Stocks(
+                ticker=request.form.get('ticker'),
+                company_name=request.form.get('company_name'),
+                initial_price=request.form.get('initial_price'),
+                volume=request.form.get('volume'),
+                mu=request.form.get('mu'),
+                sigma=request.form.get('sigma'),
+                max_step_pct=request.form.get('max_step_pct'),
+                is_active=True
+            )
+            db.session.add(new_stock)
+            db.session.commit()
+            flash(f"Stock {new_stock.ticker} added successfully!", "success")
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Error adding stock: {e}", "danger")
     stocks = Stocks.query.all()
-    market = Market_schedule.query.first()
-    return render_template('adminpanel.html', stocks=stocks, market=market)
+    return render_template('adminpanel.html', stocks=stocks)
 
+@app.route("/schedule", methods=["GET", "POST"])
+@login_required
+@admin_required
+def schedule():
+    if request.method == 'POST':
+        try:
+            open_time_str = request.form.get('open_time')
+            close_time_str = request.form.get('close_time')
+
+            open_hour, open_min = map(int, open_time_str.split(":"))
+            close_hour, close_min = map(int, close_time_str.split(":"))
+
+            open_time_obj = time(open_hour, open_min)
+            close_time_obj = time(close_hour, close_min)
+
+            open_days = request.form.getlist("open_day")
+            open_days_str = ','.join(open_days)
+
+            schedule = Market_schedule.query.first()
+            if not schedule:
+                schedule = Market_schedule()
+
+            schedule.open_time = open_time_obj
+            schedule.close_time = close_time_obj
+            schedule.open_days = open_days_str
+            schedule.is_holiday = False
+
+            db.session.add(schedule)
+            db.session.commit()
+            flash("Market schedule updated successfully.", "success")
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Error updating market schedule: {e}", "danger")
+
+    market = Market_schedule.query.first()
+    market_status = "OPEN" if is_market_open() else "CLOSED"
+    return render_template('schedule.html', market=market, market_status=market_status)
 
 
 # --- ADMIN SETTINGS (lists users + accounts) ---
@@ -892,7 +880,7 @@ def force_close():
     schedule = Market_schedule.query.first()
 
     try:
-        schedule.open_days = None
+        schedule.open_days = (7)
         db.session.commit()
         flash("Market close", "success")
     except Exception as e:
