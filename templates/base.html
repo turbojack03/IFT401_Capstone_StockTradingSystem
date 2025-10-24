@@ -8,8 +8,39 @@
   <link rel="stylesheet" href="{{ url_for('frontend_files', filename='styles.css') }}">
   <title>{% block title %}{% endblock %} - Bamboo StockSim</title>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <link id="light-theme" rel="stylesheet"  href="{{ url_for('frontend_files', filename='styles.css') }}">
+  <link id="dark-theme" rel="stylesheet"  href="{{ url_for('frontend_files', filename='stylesd.css') }}" disabled>
+
 
 </head>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const toggle = document.getElementById('switchCheckDefault');
+  const light = document.getElementById('light-theme');
+  const dark = document.getElementById('dark-theme');
+
+
+ 
+  if (localStorage.getItem('theme') === 'dark') {
+    dark.disabled = false;
+    light.disabled = true;
+    toggle.checked = true;
+  }
+
+
+  toggle.addEventListener('change', function() {
+    if (this.checked) {
+      dark.disabled = false;
+      light.disabled = true;
+      localStorage.setItem('theme', 'dark');
+    } else {
+      dark.disabled = true;
+      light.disabled = false;
+      localStorage.setItem('theme', 'light');
+    }
+  });
+});
+</script>
 
 <body>
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">

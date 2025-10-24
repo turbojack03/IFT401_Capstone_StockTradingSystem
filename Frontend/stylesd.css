@@ -1,0 +1,430 @@
+/* ===== Base Layout ===== */
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Comic Sans MS";
+  background:
+    radial-gradient(1200px 600px at 90% -10%, rgba(255,255,255,.05), transparent 60%),
+    radial-gradient(900px 500px at -10% 100%, rgba(255,255,255,.05), transparent 60%),
+    #121212;
+  color: #f1f1f1;
+  line-height: 1.6;
+}
+html, body { height: 100%; }
+
+
+/* ===== HIDDEN NAVBAR LINKS ===== */
+.navbar .nav-link.hidden {
+  color: #121212;
+}
+
+
+.nav-cash {
+  background-color: #198754 !important;
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: 500;
+  padding-right: 30px;
+}
+
+
+main {
+  flex: 1;
+  padding-left: 30px;
+  padding-right: 30px;
+}
+
+
+/* ===== Navbar ===== */
+.navbar {
+  border-radius: 0 0 1rem 1rem;
+  color: #9cff9c;
+  background-color: #1f1f1f;
+  box-shadow: 0 2px 8px rgba(255,255,255,0.05);
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+  font-size: 1.2rem;
+  position: relative;
+}
+
+
+/* ===== Footer ===== */
+footer {
+  margin-top: auto;
+}
+
+
+/* ===== Headings ===== */
+h1, h2, h3, h4, h5 {
+  font-weight: 600;
+  letter-spacing: -0.5px;
+  margin-bottom: 1rem;
+  color: #e9e9e9;
+}
+
+
+/* ===== Forms ===== */
+form {
+  background: linear-gradient(#1e3b1f, #0a290b);
+  padding: 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 24px 24px rgba(0,0,0,0.5);
+  color: #eaeaea;
+}
+
+
+input.form-control {
+  background-color: #222;
+  color: #eee;
+  border-radius: 0.75rem;
+  border: 1px solid #444;
+  padding: 0.75rem 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+
+input.form-control:focus {
+  border-color: #53f768;
+  box-shadow: 0 0 0 3px rgba(83,247,104,0.3);
+  outline: none;
+}
+
+
+button.btn {
+  border-radius: 0.75rem;
+  padding: 0.6rem 1.2rem;
+  font-weight: 500;
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+
+button.btn-primary {
+  background-color: #2a85ff;
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(10,132,255,.4);
+}
+
+
+button.btn-primary:hover {
+  background-color: #005bb5;
+  transform: translateY(-2px);
+}
+
+
+/* ===== Cards ===== */
+.card {
+  border-radius: 1rem;
+  overflow: hidden;
+  border: none;
+  transition: transform 0.2s, box-shadow 0.2s;
+  background-color: #1c1c1c;
+  color: #f1f1f1;
+}
+
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(255,255,255,0.08);
+}
+
+
+.container.mt-4 {
+  background-color: #181818;
+}
+
+
+/* ===== Bamboo2 logo ===== */
+.navbar-brand img {
+  border-radius: 12px;
+  vertical-align: middle;
+}
+
+
+/* ===== Bamboo stalks ===== */
+.bamboo {
+    position: fixed;
+    bottom: 70px;
+    width: auto;
+    height: 30vh;
+    max-height: 250px;
+    z-index: -1;
+    pointer-events: none;
+    filter: brightness(1.3);
+}
+
+
+.left-bamboo {
+    left: 10px;
+}
+
+
+.right-bamboo {
+    right: 10px;
+    transform: scaleX(-1);
+}
+
+
+/* ===== Links ===== */
+.signup-link:link {
+  color: #76ff76;
+  background-color: transparent;
+  text-decoration: none;
+}
+
+
+.signup-link:visited {
+  color: #53f768;
+  background-color: transparent;
+  text-decoration: none;
+}
+
+
+.signup-link:hover {
+  color: #aaffaa;
+  background-color: transparent;
+  text-decoration: underline;
+}
+
+
+.signup-link:active {
+  color: #fff;
+  background-color: transparent;
+  text-decoration: underline;
+}
+
+
+/* ==== Styles for signup ===== */
+.form-control {
+  font-size: 1.1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid #444;
+  background-color: #222;
+  color: #f1f1f1;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+
+.form-label {
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: #ccc;
+}
+
+
+.valid-feedback {
+  font-size: 0.9rem;
+  color: #00c853;
+}
+
+
+.invalid-feedback {
+  font-size: 0.9rem;
+  color: #ff5252;
+}
+
+
+.form-check-input {
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-right: 0.5rem;
+  background-color: #333;
+  border: 1px solid #555;
+}
+
+
+/* ===== Buy/Sell Buttons ===== */
+.buttonbuy {
+  background-color: #28a745;
+  border: none;
+  margin-left: 30px;
+  padding-bottom:50px;
+  text-align:center;
+  font-size: 25px;
+  line-height: 50px;
+  font-family:"Comic Sans MS";
+}
+.buttonbuy:hover {
+  background-color: #218838;
+}
+.buttonbuy:active {
+  background-color: #1e7e34;
+}
+.buttonsell {
+  background-color: #dc3545;
+  border: none;
+  margin-right: 30px;
+  padding-bottom: 50px;
+  text-align:center;
+  font-size: 25px;
+  line-height: 50px;
+  font-family:"Comic Sans MS";
+}
+.buttonsell:hover {
+  background-color: #c82333;
+
+
+
+}
+.buttonsell:active {
+  background-color: #bd2130;
+}
+
+/* new for dark mode */
+
+.card { background-color: #1c1c1c !important; color: #f1f1f1 !important; }
+.list-group-item { background-color: transparent !important; color: inherit !important; }
+
+
+
+.container.mt-4 { background-color: #181818 !important; }
+
+
+
+.form-control,
+.form-control:focus,
+textarea.form-control,
+textarea.form-control:focus,
+.input-group-text,
+.form-select,
+.form-select:focus {
+  background-color: #222 !important;
+  color: #f1f1f1 !important;
+  border: 1px solid #444 !important;
+  box-shadow: none !important;
+  caret-color: #f1f1f1;
+}
+
+
+.form-control::placeholder { color: #b5b5b5 !important; }
+
+
+
+.form-check-input {
+  background-color: #333 !important;
+  border-color: #555 !important;
+}
+.form-check-input:checked {
+  background-color: #0d6efd !important; /* keep Bootstrap blue */
+  border-color: #0d6efd !important;
+}
+
+
+
+input.form-control:-webkit-autofill,
+textarea.form-control:-webkit-autofill,
+select.form-select:-webkit-autofill {
+  -webkit-text-fill-color: #f1f1f1 !important;
+  -webkit-box-shadow: 0 0 0 1000px #222 inset !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+
+
+.input-group .btn { border-color: #333 !important; }
+
+
+
+.table {
+  --bs-table-bg: #1b1b1b;
+  --bs-table-color: #f2f2f2;
+  --bs-table-border-color: #333;
+  --bs-table-striped-bg: #202020;
+  --bs-table-hover-color: #f2f2f2;
+  --bs-table-hover-bg: #242424;
+  background-color: var(--bs-table-bg) !important;
+  color: var(--bs-table-color) !important;
+  border-color: var(--bs-table-border-color) !important;
+}
+.table thead th {
+  color: #eaeaea !important;
+  border-bottom-color: #333 !important;
+}
+
+
+
+.badge, .badge.bg-secondary {
+  background-color: #4a4a4a !important;
+  color: #fff !important;
+}
+
+
+
+.dropdown-menu {
+  background-color: #1f1f1f !important;
+  color: #f1f1f1 !important;
+  border-color: #333 !important;
+}
+.dropdown-item { color: #f1f1f1 !important; }
+.dropdown-item:hover,
+.dropdown-item:focus {
+  background-color: #2a2a2a !important;
+  color: #fff !important;
+}
+
+
+
+.modal-content {
+  background-color: #1b1b1b !important;
+  color: #f1f1f1 !important;
+  border-color: #333 !important;
+}
+.modal-header, .modal-footer { border-color: #333 !important; }
+
+
+
+.page-link {
+  background-color: #1f1f1f !important;
+  color: #f1f1f1 !important;
+  border-color: #333 !important;
+}
+.page-link:hover { background-color: #2a2a2a !important; }
+.page-item.disabled .page-link {
+  background-color: #222 !important;
+  color: #888 !important;
+  border-color: #333 !important;
+}
+
+
+.table-striped > tbody > tr:nth-of-type(odd) {
+  background-color: #1b1b1b !important;  
+  color: #f1f1f1 !important;
+}
+
+.table-striped > tbody > tr:nth-of-type(even) {
+  background-color: #242424 !important;  
+  color: #f1f1f1 !important;
+}
+
+
+.table td, .table th {
+  color: #f1f1f1 !important;
+}
+
+
+.table a {
+  color: #9cff9c !important;  
+  text-decoration: none;
+}
+.table a:hover {
+  color: #53f768 !important;
+  text-decoration: underline;
+}
+
+
+.table-hover > tbody > tr:hover {
+  background-color: #2d2d2d !important;
+}
+
+
+.btn-close {
+  filter: invert(1) grayscale(100%) brightness(200%);
+  opacity: 0.8;
+}
+
+.btn-close:hover {
+  opacity: 1;
+}
+
