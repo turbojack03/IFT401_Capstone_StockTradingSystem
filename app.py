@@ -28,7 +28,7 @@ from datetime import datetime, time
 import plotly.express as px
 import pandas as pd
 import holidays
-
+import json
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://admin:password@database-1.ct6es408kgrf.us-east-2.rds.amazonaws.com/stock_db'
@@ -246,13 +246,13 @@ def dashboard():
         db.session.add(account)
         db.session.commit()
         flash("No account found for this user.", "danger")
-        return redirect(url_for('login'))  
+        return redirect(url_for('login'))
 
     if request.method == "POST":
         if not is_market_open():
             flash("Market is closed.", "warning")
             return redirect(url_for("dashboard"))
-        
+
         stock_symbol = request.form.get("stockSymbol")
         buy_or_sell = request.form.get("buy_or_sell", "").upper()
         order_type = request.form.get("orderType")
@@ -303,28 +303,7 @@ def dashboard():
 
         return redirect(url_for("dashboard"))
 
-
     selected_ticker = request.args.get("selected_stock", default=None)
-    selected_stock = None
-    selected_stock_prices = []
-
-    if selected_ticker:
-        selected_stock = Stocks.query.filter_by(ticker=selected_ticker).first()
-        if selected_stock:
-            selected_stock_prices_raw = (
-                Price_ticks.query
-                .filter_by(stock_id=selected_stock.id)
-                .order_by(Price_ticks.timestamp.asc())
-                .all()
-            )
-
-            selected_stock_prices = [
-                {
-                    "timestamp": tick.timestamp.isoformat(), 
-                    "price": tick.price
-                }
-                for tick in selected_stock_prices_raw
-            ]
 
     top_stocks_query = Stocks.query.filter_by(is_active=True).all()
     top_stocks = []
@@ -359,6 +338,30 @@ def dashboard():
         })
 
     top_stocks = sorted(top_stocks, key=lambda x: x["change"], reverse=True)[:10]
+
+    if not selected_ticker and top_stocks:
+        selected_ticker = top_stocks[0]["symbol"]
+
+    selected_stock = None
+    selected_stock_prices = []
+
+    if selected_ticker:
+        selected_stock = Stocks.query.filter_by(ticker=selected_ticker).first()
+        if selected_stock:
+            selected_stock_prices_raw = (
+                Price_ticks.query
+                .filter_by(stock_id=selected_stock.id)
+                .order_by(Price_ticks.timestamp.asc())
+                .all()
+            )
+
+            selected_stock_prices = [
+                {
+                    "timestamp": tick.timestamp.strftime("%H:%M"),
+                    "price": tick.price
+                }
+                for tick in selected_stock_prices_raw
+            ]
 
     orders = stock_orders.query.filter_by(account_id=account.id).all()
 
@@ -441,11 +444,20 @@ def portfolio():
     )
 
     executed_orders = []
+    stock_data = []
     for order, stock in executed_orders_query:
         order.stock = stock
         executed_orders.append(order)
+        
+        stock_item = {
+            "ticker": stock.ticker,
+            "quantity": order.quantity
+        }
+        stock_data.append(stock_item)
 
-    return render_template("portfolio.html", portfolio=portfolio_data, total_investment=total_investment, total_value=total_value, total_pl=total_pl, pending_orders=pending_orders, executed_orders=executed_orders)
+    data_json = json.dumps(stock_data)
+
+    return render_template("portfolio.html", portfolio=portfolio_data, total_investment=total_investment, total_value=total_value, total_pl=total_pl, pending_orders=pending_orders, executed_orders=executed_orders, data_json=data_json)
 
 
 @app.route('/availablestock', methods=["GET", "POST"])
