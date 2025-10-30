@@ -1,52 +1,37 @@
 {% extends "base.html" %}
-{% block title %}accounthistory{% endblock %}
+{% block title %}Account History{% endblock %}
 {% block content %}
+<h1 class="mb-3">Account History</h1>
+<p class="text-muted">All trade and cash activity for your account.</p>
 
-
-  <h1>Account History</h1>
-  <p>This is where account history details will go.</p>
-
-
-<table class="table">
+<table class="table table-striped">
   <thead>
     <tr>
-      <th scope="col">NAME</th>
-      <th scope="col">Transaction Type</th>
-      <th scope="col">Shares#</th>
-      <th scope="col">Bought Amount</th>
-      <th scope="col">DoP</th>
+      <th>Date</th>
+      <th>Action</th>
+      <th>Stock</th>
+      <th>Quantity</th>
+      <th>Amount</th>
+      <th>Balance After</th>
+      <th>Note</th>
     </tr>
   </thead>
   <tbody>
+    {% for e in entries %}
     <tr>
-      <td>AAA</td>
-      <td>Buy</td>
-      <td>100</td>
-      <td>$1000</td>
-      <td>9/17/2025</td>
+      <td>{{ e.timestamp.strftime("%Y-%m-%d %H:%M:%S") if e.timestamp else "" }}</td>
+      <td>{{ e.action }}</td>
+      <td>{{ e.stock_symbol or "" }}</td>
+      <td>{{ e.quantity or "" }}</td>
+      <td>{{ "%.2f"|format(e.amount) }}</td>
+      <td>{{ "%.2f"|format(e.balance_after) }}</td>
+      <td>{{ e.note or "" }}</td>
     </tr>
+    {% else %}
     <tr>
-      <td>BBB</td>
-      <td>Sell</td>
-      <td>50</td>
-      <td>-$400</td>
-      <td>9/17/2025</td>
+      <td colspan="7" class="text-center text-muted">No account activity found.</td>
     </tr>
-    <tr>
-      <td>CCC</td>
-      <td>Buy</td>
-      <td>200</td>
-      <td>$2,000</td>
-      <td>9/17/2025</td>
-    </tr>
+    {% endfor %}
   </tbody>
 </table>
-
-
-
-
-
-
-
-
 {% endblock %}

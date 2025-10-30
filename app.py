@@ -102,6 +102,22 @@ class Market_schedule(db.Model):  # Market schedule model
     open_days = db.Column(db.String(20))
     is_holiday = db.Column(db.Boolean)
 
+#*****************Working**************8
+class Account_History(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    account_id = db.Column(db.Integer, db.ForeignKey("accounts.id"), nullable=False)
+    order_id = db.Column(db.Integer, db.ForeignKey('stock_orders.id'), nullable=True)
+    action = db.Column(db.String(20), nullable=False)  # BUY, SELL, DEPOSIT, WITHDRAW
+    stock_symbol = db.Column(db.String(10), nullable=True)
+    quantity = db.Column(db.Integer, nullable=True)
+    amount = db.Column(db.Float, nullable=False)  # positive=inflow, negative=outflow
+    balance_after = db.Column(db.Float, nullable=False)
+    timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    note = db.Column(db.String(255), nullable=True)
+
+#*****************Working****************
+
 
 class Price_ticks(db.Model):  # Price ticks model
     id = db.Column(db.Integer, primary_key=True)
@@ -132,6 +148,25 @@ def _run_once_on_first_request():
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+def log_activity(account, action, amount, *, stock_symbol=None, quantity=None, order_id=None, note=None):
+    try:
+        entry = Account_History(
+            user_id=account.user_id,
+            account_id=account.id,
+            order_id=order_id,
+            action=action,
+            stock_symbol=stock_symbol,
+            quantity=quantity,
+            amount=float(amount),
+            balance_after=float(account.cash_balance),
+            note=note
+        )
+        db.session.add(entry)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Failed to log account history: {e}")
 
 #fish3
 # Routes
@@ -276,9 +311,27 @@ def dashboard():
                 flash(f"Insufficient balance to buy {quantity} shares of {stock_symbol}.", "danger")
                 return redirect(url_for("dashboard"))
             account.cash_balance -= total_cost
+                        # log it
+            log_activity(
+                account,
+                "BUY",
+                -total_cost,
+                stock_symbol=stock_symbol,
+                quantity=quantity,
+                note="Order submitted"
+            )
             order_status = "Pending"
         elif buy_or_sell == "SELL":
             account.cash_balance += total_cost
+            # log it
+            log_activity(
+                account,
+                "SELL",
+                total_cost,
+                stock_symbol=stock_symbol,
+                quantity=quantity,
+                note="Order submitted"
+            )
             order_status = "Pending"
         else:
             flash("Invalid order type.", "danger")
@@ -505,10 +558,28 @@ def availablestock():
                 flash(f"Insufficient funds to buy {quantity} shares of {stock_symbol}.", "danger")
                 return redirect(url_for("availablestock"))
             account.cash_balance -= total_cost
+            # log it
+            log_activity(
+                account,
+                "BUY",
+                -total_cost,
+                stock_symbol=stock_symbol,
+                quantity=quantity,
+                note="Order submitted"
+            )
             order_status = "Pending"
 
         elif buy_or_sell == "SELL":
             account.cash_balance += total_cost
+            # log it
+            log_activity(
+                account,
+                "SELL",
+                total_cost,
+                stock_symbol=stock_symbol,
+                quantity=quantity,
+                note="Order submitted"
+            )
             order_status = "Pending"
 
         else:
@@ -603,7 +674,15 @@ def changepassword():
 @app.route("/accounthistory")
 @login_required
 def accounthistory():
-    return render_template("accounthistory.html")
+    account = Accounts.query.filter_by(user_id=current_user.id).first()
+    if not account:
+        flash("No account found.", "danger")
+        return redirect(url_for("dashboard"))
+    entries = (Account_History.query
+               .filter_by(account_id=account.id)
+               .order_by(Account_History.timestamp.desc())
+               .all())
+    return render_template("accounthistory.html", entries=entries)
 
 @app.route("/settings")
 @login_required
@@ -922,15 +1001,37 @@ def update_cash():
                 flash("Insufficient balance.", "danger")
                 return redirect(url_for("dashboard"))
             account.cash_balance -= amount
+
+            try:
+                log_activity(
+                    account,
+                    'WITHDRAW',
+                    -amount,
+                    note='User cash update'
+                )
+            except Exception as e:
+                app.logger.error(f"cash log failed: {e}")
+
         else: 
             account.cash_balance += amount
+
+            try:
+                log_activity(
+                    account,
+                    'DEPOSIT',
+                     amount,
+                    note='User cash update'
+                )
+            except Exception as e:
+                app.logger.error(f"cash log failed: {e}")
         
         db.session.commit()
         flash(f"Successfully {action}ed ${amount:.2f}.", "success")
+        
     except Exception as e:
         db.session.rollback()
         flash(f"Failed to update balance: {e}", "danger")
-    
+
     return redirect(url_for("dashboard"))
 
 
