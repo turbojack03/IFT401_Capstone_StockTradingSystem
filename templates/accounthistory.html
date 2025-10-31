@@ -2,7 +2,7 @@
 {% block title %}Account History{% endblock %}
 {% block content %}
 <h1 class="mb-3">Account History</h1>
-<p class="text-muted">All trade and cash activity for your account.</p>
+<p>All trade and cash activity for your account.</p>
 
 <table class="table table-striped">
   <thead>
@@ -29,7 +29,7 @@
     </tr>
     {% else %}
     <tr>
-      <td colspan="7" class="text-center text-muted">No account activity found.</td>
+      <td colspan="7" class="text-center">No account activity found.</td>
     </tr>
     {% endfor %}
   </tbody>

@@ -1,4 +1,24 @@
-/* ===== Base Layout ===== */
+/* ===== Base Layout (Dark) ===== */
+:root{
+  --bg: #121212;
+  --bg-elev: #1c1c1c;
+  --text: #f1f1f1;
+  --muted: #9aa3b2;
+  --primary: #0a84ff;
+  --primary-600:#0076f3;
+  --primary-700:#0065d0;
+  --accent: #53f768;
+  --danger:#ff3b30;
+  --warning:#ffcc00;
+  --border: #262b33;
+  --ring: rgba(10,132,255,.35);
+  --shadow: 0 10px 25px rgba(0,0,0,.4), 0 2px 6px rgba(0,0,0,.35);
+  --radius: 16px;
+  --radius-sm: 12px;
+  --radius-xs: 10px;
+  --gap: 16px;
+}
+
 body {
   min-height: 100vh;
   display: flex;
@@ -7,21 +27,19 @@ body {
   background:
     radial-gradient(1200px 600px at 90% -10%, rgba(255,255,255,.05), transparent 60%),
     radial-gradient(900px 500px at -10% 100%, rgba(255,255,255,.05), transparent 60%),
-    #121212;
-  color: #f1f1f1;
+    var(--bg);
+  color: var(--text);
   line-height: 1.6;
 }
 html, body { height: 100%; }
-
 
 /* ===== HIDDEN NAVBAR LINKS ===== */
 .navbar .nav-link.hidden {
   color: #121212;
 }
 
-
 .nav-cash {
-  background-color: #198754 !important;
+  background-color: #198754;
   color: #fff;
   padding: 4px 10px;
   border-radius: 20px;
@@ -29,66 +47,83 @@ html, body { height: 100%; }
   padding-right: 30px;
 }
 
-
 main {
   flex: 1;
   padding-left: 30px;
   padding-right: 30px;
 }
 
-
 /* ===== Navbar ===== */
 .navbar {
   border-radius: 0 0 1rem 1rem;
   color: #9cff9c;
   background-color: #1f1f1f;
-  box-shadow: 0 2px 8px rgba(255,255,255,0.05);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.35);
   padding-top: 1.5rem;
   padding-bottom: 1.5rem;
   font-size: 1.2rem;
   position: relative;
 }
 
-
 /* ===== Footer ===== */
 footer {
   margin-top: auto;
 }
-
 
 /* ===== Headings ===== */
 h1, h2, h3, h4, h5 {
   font-weight: 600;
   letter-spacing: -0.5px;
   margin-bottom: 1rem;
-  color: #e9e9e9;
+  color: #f5f5f5;
 }
-
 
 /* ===== Forms ===== */
 form {
   background: linear-gradient(#1e3b1f, #0a290b);
   padding: 2rem;
   border-radius: 1rem;
-  box-shadow: 0 24px 24px rgba(0,0,0,0.5);
-  color: #eaeaea;
+  box-shadow: 0 24px 24px rgba(0,0,0,0.4);
+  display: grid;
+  gap: 12px;
 }
 
 
-input.form-control {
-  background-color: #222;
-  color: #eee;
+input.form-control,
+input[type="text"],
+input[type="number"],
+input[type="time"],
+textarea,
+select {
+  width: 100%;
+  background: #222;
+  color: #f1f1f1;
   border-radius: 0.75rem;
   border: 1px solid #444;
   padding: 0.75rem 1rem;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-
-input.form-control:focus {
+input.form-control:focus,
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="time"]:focus,
+textarea:focus,
+select:focus {
   border-color: #53f768;
-  box-shadow: 0 0 0 3px rgba(83,247,104,0.3);
+  box-shadow: 0 0 0 3px rgba(83,247,104,0.25);
   outline: none;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #9aa3b2;
+}
+
+label{
+  font-size: .9rem;
+  color: #b8c0cc;
+  margin-bottom: 4px;
 }
 
 
@@ -99,72 +134,57 @@ button.btn {
   transition: background-color 0.2s, transform 0.2s;
 }
 
-
 button.btn-primary {
-  background-color: #2a85ff;
+  background: linear-gradient(180deg, var(--primary) 0%, var(--primary-600) 100%);
   color: #fff;
-  box-shadow: 0 6px 16px rgba(10,132,255,.4);
+  box-shadow: 0 6px 16px rgba(10,132,255,.3);
 }
-
 
 button.btn-primary:hover {
   background-color: #005bb5;
   transform: translateY(-2px);
 }
 
-
 /* ===== Cards ===== */
 .card {
   border-radius: 1rem;
   overflow: hidden;
-  border: none;
+  border: 1px solid rgba(255,255,255,0.015);
   transition: transform 0.2s, box-shadow 0.2s;
-  background-color: #1c1c1c;
-  color: #f1f1f1;
+  background: var(--bg-elev);
+  color: var(--text);
+  backdrop-filter: blur(4px);
 }
-
 
 .card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(255,255,255,0.08);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
 }
-
 
 .container.mt-4 {
-  background-color: #181818;
+  background-color: transparent;
 }
 
 
-/* ===== Bamboo2 logo ===== */
 .navbar-brand img {
   border-radius: 12px;
   vertical-align: middle;
 }
 
-
 /* ===== Bamboo stalks ===== */
 .bamboo {
-    position: fixed;
-    bottom: 70px;
-    width: auto;
-    height: 30vh;
-    max-height: 250px;
-    z-index: -1;
-    pointer-events: none;
-    filter: brightness(1.3);
+  position: fixed;
+  bottom: 70px;
+  width: auto;
+  height: 30vh;
+  max-height: 250px;
+  z-index: -1;
+  pointer-events: none;
+  filter: brightness(1.2);
 }
 
-
-.left-bamboo {
-    left: 10px;
-}
-
-
-.right-bamboo {
-    right: 10px;
-    transform: scaleX(-1);
-}
-
+.left-bamboo { left: 10px; }
+.right-bamboo { right: 10px; transform: scaleX(-1); }
 
 /* ===== Links ===== */
 .signup-link:link {
@@ -172,59 +192,42 @@ button.btn-primary:hover {
   background-color: transparent;
   text-decoration: none;
 }
-
-
 .signup-link:visited {
   color: #53f768;
   background-color: transparent;
   text-decoration: none;
 }
-
-
 .signup-link:hover {
   color: #aaffaa;
   background-color: transparent;
   text-decoration: underline;
 }
-
-
 .signup-link:active {
   color: #fff;
   background-color: transparent;
   text-decoration: underline;
 }
 
-
 /* ==== Styles for signup ===== */
 .form-control {
   font-size: 1.1rem;
-  padding: 0.75rem 1rem;
-  border-radius: 0.75rem;
-  border: 1px solid #444;
-  background-color: #222;
-  color: #f1f1f1;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
-
 
 .form-label {
   font-weight: 500;
   margin-bottom: 0.5rem;
-  color: #ccc;
+  color: #dcdcdc;
 }
-
 
 .valid-feedback {
   font-size: 0.9rem;
   color: #00c853;
 }
-
-
 .invalid-feedback {
   font-size: 0.9rem;
   color: #ff5252;
 }
-
 
 .form-check-input {
   width: 1.5rem;
@@ -233,7 +236,10 @@ button.btn-primary:hover {
   background-color: #333;
   border: 1px solid #555;
 }
-
+.form-check-input:checked {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
 
 /* ===== Buy/Sell Buttons ===== */
 .buttonbuy {
@@ -245,13 +251,11 @@ button.btn-primary:hover {
   font-size: 25px;
   line-height: 50px;
   font-family:"Comic Sans MS";
+  color: #fff;
 }
-.buttonbuy:hover {
-  background-color: #218838;
-}
-.buttonbuy:active {
-  background-color: #1e7e34;
-}
+.buttonbuy:hover { background-color: #218838; }
+.buttonbuy:active { background-color: #1e7e34; }
+
 .buttonsell {
   background-color: #dc3545;
   border: none;
@@ -261,18 +265,211 @@ button.btn-primary:hover {
   font-size: 25px;
   line-height: 50px;
   font-family:"Comic Sans MS";
+  color: #fff;
 }
-.buttonsell:hover {
-  background-color: #c82333;
+.buttonsell:hover { background-color: #c82333; }
+.buttonsell:active { background-color: #bd2130; }
 
-
-
+/* ====== Modern Admin Panel Styles (Dark) ====== */
+#adminpanel-content{
+  max-width: 18000px;
+  margin: 24px auto 80px;
+  padding: 0 20px;
 }
-.buttonsell:active {
-  background-color: #bd2130;
+
+/* Headings */
+#adminpanel-content h2{
+  font-size: clamp(1.6rem, 1.2rem + 1.2vw, 2rem);
+  font-weight: 700;
+  letter-spacing: -.01em;
+  margin: 8px 0 20px;
+  color: #f5f5f5;
+}
+#adminpanel-content h3{
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0 0 14px;
+  color: #f5f5f5;
+}
+#adminpanel-content h4, 
+#adminpanel-content h5{
+  color: #9aa3b2;
+  font-weight: 600;
+  margin: 14px 0 10px;
 }
 
-/* new for dark mode */
+/* Cards inside admin */
+#adminpanel-content .card{
+  background: #171a20;
+  border: 1px solid rgba(255,255,255,0.02);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px;
+  margin: 18px 0;
+  backdrop-filter: saturate(130%) blur(6px);
+}
+
+/* Admin forms (dark green) */
+#adminpanel-content form{
+  background: linear-gradient(#1e3b1f, #0a290b);
+  padding: 1.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 18px 18px rgba(0,0,0,0.25);
+  gap: 12px;
+}
+
+
+.flex-group{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
+  gap: 12px;
+}
+
+input[type="checkbox"],
+input[type="radio"]{
+  accent-color: var(--primary);
+  width: 16px; height: 16px;
+  vertical-align: middle;
+  transform: translateY(-1px);
+}
+
+button.primary,
+.update-rate-btn,
+#toggle-market-btn{
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: var(--radius-xs);
+  border: 1px solid transparent;
+  background: linear-gradient(180deg, var(--primary) 0%, var(--primary-600) 100%);
+  color:#fff;
+  font-weight: 600;
+  letter-spacing: .01em;
+  cursor: pointer;
+  transition: transform .06s ease, filter .18s ease, box-shadow .18s ease, background .18s ease;
+  box-shadow: 0 4px 10px rgba(10,132,255,.25);
+}
+
+button:hover,
+.update-rate-btn:hover,
+#toggle-market-btn:hover{
+  filter: brightness(1.02);
+  box-shadow: 0 6px 16px rgba(10,132,255,.30);
+}
+
+button:active,
+.update-rate-btn:active,
+#toggle-market-btn:active{
+  transform: translateY(1px);
+}
+
+button.secondary{
+  background: transparent;
+  color: var(--text);
+  border:1px solid #303540;
+  box-shadow: none;
+}
+button.danger{
+  background: linear-gradient(180deg, var(--danger), #e02a22);
+  box-shadow: 0 4px 10px rgba(255,59,48,.25);
+}
+
+/* Table */
+#fluctuation-table{
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  border: 1px solid #262b33;
+  background: rgba(0,0,0,0.15);
+}
+
+#fluctuation-table thead th{
+  text-align: left;
+  font-size: .85rem;
+  font-weight: 700;
+  color: #9aa3b2;
+  padding: 12px 14px;
+  background: rgba(255,255,255,.01);
+  border-bottom: 1px solid #262b33;
+}
+
+#fluctuation-table tbody td{
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.01);
+}
+
+#fluctuation-table tbody tr:hover{
+  background: rgba(10,132,255,.06);
+}
+
+#fluctuation-table input.new-rate{
+  width: 110px;
+  text-align: right;
+  background: #222 !important;
+  border: 1px solid #444 !important;
+  color: #f1f1f1 !important;
+}
+
+/* Links */
+a{
+  color: var(--primary);
+  text-decoration: none;
+}
+a:hover{ text-decoration: underline; }
+
+/* Utilities */
+.container .p-5{
+  background: transparent;
+  border: 1px dashed rgba(255,255,255,0.03);
+  color: var(--muted);
+  border-radius: var(--radius-xs);
+}
+
+/* Responsive tweaks */
+@media (max-width: 640px){
+  .card{ padding: 14px; }
+  #adminpanel-content{ padding: 0 14px; }
+  button, .update-rate-btn{ width: 100%; }
+}
+
+/* Focus-visible for keyboard users */
+:focus-visible{
+  outline: none;
+  box-shadow: 0 0 0 4px var(--ring);
+  border-color: var(--primary) !important;
+}
+
+/* Nice subtle separators for sections inside forms */
+.card form h4,
+.card form h5{
+  margin-top: 10px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255,255,255,0.03);
+}
+
+.admin-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:var(--gap);
+  align-items:start
+}
+.admin-col{
+  display:flex;
+  flex-direction:column;
+  gap:var(--gap)
+}
+@media (max-width:900px){
+  .admin-grid{grid-template-columns:1fr}
+}
+
+/* new for dark */
+
+
 
 .card { background-color: #1c1c1c !important; color: #f1f1f1 !important; }
 .list-group-item { background-color: transparent !important; color: inherit !important; }
@@ -312,7 +509,6 @@ textarea.form-control:focus,
 }
 
 
-
 input.form-control:-webkit-autofill,
 textarea.form-control:-webkit-autofill,
 select.form-select:-webkit-autofill {
@@ -320,7 +516,6 @@ select.form-select:-webkit-autofill {
   -webkit-box-shadow: 0 0 0 1000px #222 inset !important;
   transition: background-color 5000s ease-in-out 0s;
 }
-
 
 
 .input-group .btn { border-color: #333 !important; }
@@ -344,12 +539,10 @@ select.form-select:-webkit-autofill {
 }
 
 
-
 .badge, .badge.bg-secondary {
   background-color: #4a4a4a !important;
   color: #fff !important;
 }
-
 
 
 .dropdown-menu {
@@ -365,14 +558,12 @@ select.form-select:-webkit-autofill {
 }
 
 
-
 .modal-content {
   background-color: #1b1b1b !important;
   color: #f1f1f1 !important;
   border-color: #333 !important;
 }
 .modal-header, .modal-footer { border-color: #333 !important; }
-
 
 
 .page-link {
@@ -424,7 +615,7 @@ select.form-select:-webkit-autofill {
   opacity: 0.8;
 }
 
+
 .btn-close:hover {
   opacity: 1;
 }
-
