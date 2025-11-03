@@ -47,7 +47,12 @@ document.addEventListener('DOMContentLoaded', function() {
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
 
+      {% if current_user.is_authenticated and current_user.role == 'user' %}
       <a class="navbar-brand" href="{{ url_for('dashboard') }}">Bamboo StockSim</a>
+      {% endif %}
+      {% if current_user.is_authenticated and current_user.role == 'admin' %}
+      <a class="navbar-brand" href="{{ url_for('adminpanel') }}">Bamboo StockSim</a>
+      {% endif %}
       <img src="{{ url_for('frontend_files', filename='bamboo2.png') }}" alt="Bamboo2"
         style="height:30px; width:auto; margin-right:10px;">
       </a>

@@ -3,21 +3,18 @@
 
 {% block content %}
 <div class="container mt-4">
-  <div class="d-flex align-items-center justify-content-between mb-3">
-    <h1 class="h3 m-0">Available Stocks</h1>
-    <div class="d-flex gap-2">
-      <input id="searchInput" class="form-control" type="search" placeholder="Search by symbol or name"
-        aria-label="Search">
-      <select id="sectorFilter" class="form-select" aria-label="Filter by sector">
-        <option value="">All Sectors</option>
-        <option>Technology</option>
-        <option>Financials</option>
-        <option>Healthcare</option>
-        <option>Energy</option>
-        <option>Consumer</option>
-        <option>Industrials</option>
-      </select>
-    </div>
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <h1 class="h3 m-0">Available Stocks</h1>
+  <form class="d-flex gap-2" method="GET" action="{{ url_for('availablestock') }}">
+    <input id="searchInput"
+           name="q"
+           class="form-control"
+           type="search"
+           placeholder="Search by symbol or name"
+           value="{{ search or '' }}"
+           aria-label="Search">
+  </form>
+</div>
   </div>
 
   <div class="card shadow-sm">
@@ -88,7 +85,7 @@
 
           <div class="mb-3">
             <label for="stockSymbol" class="form-label">Stock Symbol:</label>
-            <input type="text" name="stockSymbol" id="stockSymbol" class="form-control" required>
+            <input type="text" name="stockSymbol" id="stockSymbol" class="form-control" value="{{ selected_stock.ticker if selected_stock else '' }}" required>
           </div>
 
           <div class="mb-3">
@@ -102,11 +99,17 @@
 
           <div class="mb-3">
             <label for="quantity" class="form-label">Quantity:</label>
-            <input type="number" name="quantity" id="quantity" class="form-control" min="1" required>
+            <input type="number" name="quantity" id="quantity" class="form-control" value="1" min="1" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Total Cost:</label>
+            <input type="text" id="totalCost" class="form-control" value="0.00" readonly>
           </div>
 
           <button type="submit" class="btn btn-success w-100">Submit Order</button>
         </form>
+
         <script>
           function setBuySell(type) {
             document.getElementById("buy_or_sell").value = type;
@@ -115,137 +118,38 @@
             document.getElementById("btnSell").classList.toggle("btn-danger", type === "SELL");
             document.getElementById("btnSell").classList.toggle("btn-outline-danger", type !== "SELL");
           }
+
+          let latestPrice = parseFloat('{{ selected_stock_prices[-1].price if selected_stock_prices else selected_stock.initial_price if selected_stock else 0.0 }}');
+          const quantityInput = document.getElementById('quantity');
+          const totalCostInput = document.getElementById('totalCost');
+
+          function updateTotalCost() {
+            const qty = parseInt(quantityInput.value) || 0;
+            const total = latestPrice * qty;
+            totalCostInput.value = total.toFixed(2);
+          }
+
+          quantityInput.addEventListener('input', updateTotalCost);
+
+          const tradeModal = document.getElementById('tradeModal');
+          tradeModal.addEventListener('show.bs.modal', (event) => {
+            const btn = event.relatedTarget;
+            const symbol = btn.getAttribute('data-symbol');
+            const price = parseFloat(btn.getAttribute('data-price'));
+
+            document.getElementById('stockSymbol').value = symbol;
+
+            // Update latestPrice for total cost calculation
+            latestPrice = price;
+            updateTotalCost();
+          });
+
+          // Initialize total cost on page load
+          updateTotalCost();
         </script>
       </div>
     </div>
   </div>
 </div>
 
-{% endblock %}
-
-{% block scripts %}
-<script>
-  (function () {
-    const rowsPerPage = 10;
-    let currentPage = 1;
-
-    const searchInput = document.getElementById('searchInput');
-    const sectorFilter = document.getElementById('sectorFilter');
-    const tableBody = document.getElementById('stockTableBody');
-    const rowCount = document.getElementById('rowCount');
-    const prevBtn = document.getElementById('prevPage');
-    const nextBtn = document.getElementById('nextPage');
-
-    function getAllRows() {
-      return Array.from(tableBody.querySelectorAll('tr'));
-    }
-
-    function applyFilters() {
-      const q = (searchInput.value || '').trim().toLowerCase();
-      const sector = sectorFilter.value;
-
-      getAllRows().forEach(tr => {
-        const symbol = (tr.children[0].innerText || '').toLowerCase();
-        const name = (tr.children[1].innerText || '').toLowerCase();
-        const trSector = tr.getAttribute('data-sector') || '';
-        const matchesSearch = !q || symbol.includes(q) || name.includes(q);
-        const matchesSector = !sector || trSector === sector;
-        tr.dataset.visible = (matchesSearch && matchesSector) ? '1' : '0';
-      });
-
-      currentPage = 1;
-      paginate();
-    }
-
-    function visibleRows() {
-      return getAllRows().filter(tr => tr.dataset.visible !== '0');
-    }
-
-    function paginate() {
-      const visible = visibleRows();
-      const total = visible.length;
-      const totalPages = Math.max(1, Math.ceil(total / rowsPerPage));
-      currentPage = Math.min(currentPage, totalPages);
-
-      getAllRows().forEach(tr => tr.classList.add('d-none'));
-
-      const start = (currentPage - 1) * rowsPerPage;
-      const slice = visible.slice(start, start + rowsPerPage);
-      slice.forEach(tr => tr.classList.remove('d-none'));
-
-      prevBtn.disabled = currentPage === 1;
-      nextBtn.disabled = currentPage === totalPages;
-      rowCount.textContent = `Showing ${slice.length} of ${total} items`;
-    }
-
-    // Sorting
-    document.querySelectorAll('.sortable').forEach(th => {
-      th.style.cursor = 'pointer';
-      th.addEventListener('click', () => {
-        const key = th.dataset.sort;
-        const idx = key === 'price' ? 2 : key === 'change' ? 3 : 4;
-        const rows = getAllRows();
-        const dir = th.dataset.dir = th.dataset.dir === 'asc' ? 'desc' : 'asc';
-        rows.sort((a, b) => {
-          const av = parseFloat(a.children[idx].dataset.price || a.children[idx].innerText.replace(/[+$,%]/g, '')) || 0;
-          const bv = parseFloat(b.children[idx].dataset.price || b.children[idx].innerText.replace(/[+$,%]/g, '')) || 0;
-          return dir === 'asc' ? av - bv : bv - av;
-        });
-        rows.forEach(r => tableBody.appendChild(r));
-        applyFilters();
-      });
-    });
-
-    // Search / filter listeners
-    searchInput.addEventListener('input', applyFilters);
-    sectorFilter.addEventListener('change', applyFilters);
-
-    // Pagination
-    prevBtn.addEventListener('click', () => { currentPage--; paginate(); });
-    nextBtn.addEventListener('click', () => { currentPage++; paginate(); });
-
-    // Initial mark all as visible, then paginate
-    getAllRows().forEach(tr => tr.dataset.visible = '1');
-    paginate();
-
-    // Trade modal wiring
-    const tradeModal = document.getElementById('tradeModal');
-    tradeModal.addEventListener('show.bs.modal', (event) => {
-      const btn = event.relatedTarget;
-      const symbol = btn.getAttribute('data-symbol');
-      const name = btn.getAttribute('data-name');
-      const price = btn.getAttribute('data-price');
-
-      document.getElementById('orderSymbol').value = symbol;
-      document.getElementById('orderName').value = name;
-      document.getElementById('orderPrice').value = parseFloat(price).toFixed(2);
-    });
-
-    // Limit toggle
-    const limitToggle = document.getElementById('limitToggle');
-    const limitGroup = document.getElementById('limitGroup');
-    limitToggle.addEventListener('change', () => {
-      limitGroup.classList.toggle('d-none', !limitToggle.checked);
-    });
-
-    // Fake submit handler (replace with fetch to backend endpoint)
-    document.getElementById('orderForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const payload = {
-        symbol: document.getElementById('orderSymbol').value,
-        name: document.getElementById('orderName').value,
-        side: document.getElementById('orderSide').value,
-        qty: parseInt(document.getElementById('orderQty').value, 10),
-        limit: limitToggle.checked ? parseFloat(document.getElementById('limitPrice').value) : null
-      };
-      // Example: POST to '/api/orders' with JSON
-      // fetch('/api/orders', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) })
-      //   .then(r => r.json()).then(() => bootstrap.Modal.getInstance(tradeModal).hide());
-
-      // For now, just close the modal
-      const modal = bootstrap.Modal.getInstance(tradeModal);
-      if (modal) modal.hide();
-    });
-  })();
-</script>
 {% endblock %}

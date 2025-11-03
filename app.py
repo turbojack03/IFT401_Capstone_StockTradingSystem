@@ -15,11 +15,12 @@
 # to change to admin do in mysql query: UPDATE user SET role='admin' WHERE username='Rootbeer';
 
 
-
+from apscheduler.schedulers.background import BackgroundScheduler 
 from pathlib import Path
 from flask import Flask, render_template, redirect, url_for, flash, request, send_from_directory, jsonify, render_template_string
 from flask_bootstrap import Bootstrap5  # or Bootstrap if that's the version you installed
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import or_ 
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.dialects.mysql import SET
@@ -29,6 +30,7 @@ import plotly.express as px
 import pandas as pd
 import holidays
 import json
+
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://admin:password@database-1.ct6es408kgrf.us-east-2.rds.amazonaws.com/stock_db'
@@ -167,7 +169,79 @@ def log_activity(account, action, amount, *, stock_symbol=None, quantity=None, o
     except Exception as e:
         db.session.rollback()
         app.logger.error(f"Failed to log account history: {e}")
+        
+def execute_pending_orders():
+    from datetime import datetime
+    with app.app_context():
+        print(f"[{datetime.now()}] Running scheduled order execution...")
 
+        pending_orders = stock_orders.query.filter_by(status="Pending").all()
+
+        for order in pending_orders:
+            account = Accounts.query.get(order.account_id)
+            stock = Stocks.query.get(order.stock_id)
+            
+            if not account or not stock:
+                continue  # skip if something is missing
+
+            # Get latest stock price
+            latest_tick = Price_ticks.query.filter_by(stock_id=stock.id).order_by(Price_ticks.timestamp.desc()).first()
+            current_price = latest_tick.price if latest_tick else stock.initial_price
+
+            total_value = current_price * order.quantity
+
+            try:
+                if order.buy_or_sell == "BUY":
+                    if account.cash_balance >= total_value:
+                        account.cash_balance -= total_value
+                        order.status = "Executed"
+                        order.executed_at = datetime.utcnow()
+                        log_activity(
+                            account,
+                            "BUY",
+                            -total_value,
+                            stock_symbol=stock.ticker,
+                            quantity=order.quantity,
+                            order_id=order.id,
+                            note="Auto-executed"
+                        )
+                    else:
+                        order.status = "Failed"
+                        order.executed_at = datetime.utcnow()
+                        log_activity(
+                            account,
+                            "BUY_FAILED",
+                            0,
+                            stock_symbol=stock.ticker,
+                            quantity=order.quantity,
+                            order_id=order.id,
+                            note="Insufficient funds"
+                        )
+                elif order.buy_or_sell == "SELL":
+                    # For simplicity, assuming users can sell any pending quantity
+                    account.cash_balance += total_value
+                    order.status = "Executed"
+                    order.executed_at = datetime.utcnow()
+                    log_activity(
+                        account,
+                        "SELL",
+                        total_value,
+                        stock_symbol=stock.ticker,
+                        quantity=order.quantity,
+                        order_id=order.id,
+                        note="Auto-executed"
+                    )
+                db.session.commit()
+                print(f"Order {order.id} executed: {order.buy_or_sell} {order.quantity} of {stock.ticker} at ${current_price:.2f}")
+            except Exception as e:
+                db.session.rollback()
+                print(f"Failed to execute order {order.id}: {e}")
+
+# Start scheduler
+scheduler = BackgroundScheduler()
+
+scheduler.add_job(execute_pending_orders, 'cron', hour=9, minute=0)
+scheduler.start()
 #fish3
 # Routes
 @app.route('/frontend/<path:filename>')
@@ -177,7 +251,11 @@ def frontend_files(filename):
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
+        # Redirect based on role if already logged in
+        if current_user.role == 'admin':
+            return redirect(url_for('adminpanel'))
+        else:
+            return redirect(url_for('dashboard'))
 
     if request.method == 'POST':
         username = request.form.get('username')
@@ -186,10 +264,16 @@ def login():
         user = User.query.filter_by(username=username).first()
         if user and check_password_hash(user.password, password):
             user.last_login_at = datetime.utcnow()
-            db.session.commit()            
+            db.session.commit()
             login_user(user)
+
             next_page = request.args.get('next')
-            return redirect(next_page or url_for('dashboard'))
+
+            # Redirect based on role
+            if user.role == 'admin':
+                return redirect(next_page or url_for('adminpanel'))
+            else:
+                return redirect(next_page or url_for('dashboard'))
         else:
             flash('Invalid username or password', 'danger')
 
@@ -608,7 +692,21 @@ def availablestock():
 
         return redirect(url_for("availablestock"))
 
-    stocks = Stocks.query.filter_by(is_active=True).all()
+    # NEW: simple server-side search
+    q = request.args.get("q", "").strip()
+
+    stocks_query = Stocks.query.filter_by(is_active=True)
+    if q:
+        like = f"%{q}%"
+        stocks_query = stocks_query.filter(
+            or_(
+                Stocks.ticker.ilike(like),
+                Stocks.company_name.ilike(like),
+            )
+        )
+
+    stocks = stocks_query.order_by(Stocks.ticker.asc()).all()
+    
     stock_list = []
 
     for s in stocks:
