@@ -15,14 +15,14 @@
   <h2 class="mb-4">User Administration</h2>
 
   {% with messages = get_flashed_messages(with_categories=True) %}
-    {% if messages %}
-      {% for category, msg in messages %}
-        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-          {{ msg }}
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-      {% endfor %}
-    {% endif %}
+  {% if messages %}
+  {% for category, msg in messages %}
+  <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+    {{ msg }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+  {% endfor %}
+  {% endif %}
   {% endwith %}
 
   <table class="table table-sm">
@@ -34,95 +34,84 @@
         <th>Email</th>
         <th>Cash</th>
         <th>Status</th>
-        <th>Action</th>
+        <th>Activity</th>
       </tr>
-
     </thead>
     <tbody>
       {% if rows and rows|length > 0 %}
-        {% for u, a in rows %}
-          <!-- Main user row -->
-          <tr>
-            <td>{{ u.id }}</td>
-            <td>{{ u.first_name }} {{ u.last_name }}</td>
-            <td>{{ u.username }}</td>
-            <td>{{ u.email }}</td>
-            <td>${{ (a.cash_balance or 0) | round(2) }}</td>
-            <td>
-              <form method="post" action="{{ url_for('admin_update_user', user_id=u.id) }}" class="d-flex gap-2">
-                {% set cur = (a.status or 'Active') %}
-                <select name="status" class="form-select form-select-sm" style="max-width: 180px;">
-                  <option value="Active" {% if cur=='Active' %}selected{% endif %}>Active</option>
-                  <option value="FlaggedAccount" {% if cur=='FlaggedAccount' %}selected{% endif %}>FlaggedAccount</option>
-                  <option value="Banned" {% if cur=='Banned' %}selected{% endif %}>Banned</option>
-                </select>
-
-                <input type="number" step="0.01" name="cash_delta" class="form-control form-control-sm"
-                       placeholder="+10.00 or -5.00" style="max-width: 140px;">
-                <button type="submit" class="btn btn-sm btn-primary">Save</button>
-              </form>
-            </td>
-            <td><!-- more actions if needed --></td>
-          </tr>
-
-          <!-- Orders for this user -->
-          <tr>
-            <td colspan="7">
-              <h5 class="mt-3 mb-1">{{ u.first_name }} {{ u.last_name }}</h5>
-              <h6 class="mt-3 mb-2">Orders</h6>
-                              <button type="change_status_to_active" class="btn btn-sm btn-primary">Activate Status</button>
-
-              {% if a.orders and a.orders|length > 0 %}
-                <table class="table table-hover table-bordered table-sm mb-0">
-                  <thead>
-                    <tr>
-                      <th>Stock ID</th>
-                      <th>Type</th>
-                      <th>Executed At</th>
-                      <th>Quantity</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for o in a.orders %}
-                      <tr>
-                        <td>{{ o.stock_id }}</td>
-                        <td>{{ o.buy_or_sell }}</td>
-                        <td>
-                          {% if o.executed_at %}
-                            {{ o.executed_at.strftime('%Y-%m-%d %H:%M:%S') }}
-                          {% else %}
-                            —
-                          {% endif %}
-                        </td>
-                        <td>{{ "%.2f"|format(o.quantity or 0) }}</td>
-                        <td>{{ o.status }}</td> 
-                        
-                      </tr>
-                      
-                    {% endfor %}
-                  </tbody>
-                  
-                </table>
-              {% else %}
-              
-                <p class="mb-0">No orders found for this user.</p>
-              {% endif %}
-            </td>
-            
-          </tr>
-          <tr>
-            <td colspan="7">
-              <hr class="user-divider">
-            </td>
-          </tr>
-        {% endfor %}
+      {% for u, a in rows %}
+      <tr>
+        <td>{{ u.id }}</td>
+        <td>{{ u.first_name }} {{ u.last_name }}</td>
+        <td>{{ u.username }}</td>
+        <td>{{ u.email }}</td>
+        <td>${{ (a.cash_balance or 0) | round(2) }}</td>
+        <td>
+          <form method="post" action="{{ url_for('admin_update_user', user_id=u.id) }}" class="d-flex gap-2">
+            {% set cur = a.status | list | first if a.status else 'Active' %}
+            <select name="status" class="form-select form-select-sm" style="max-width: 180px;">
+              <option value="Active" {% if cur=='Active' %}selected{% endif %}>Active</option>
+              <option value="FlaggedAccount" {% if cur=='FlaggedAccount' %}selected{% endif %}>Flagged user</option>
+              <option value="Banned" {% if cur=='Banned' %}selected{% endif %}>Banned</option>
+            </select>
+            <input type="number" step="0.01" name="cash_delta" class="form-control form-control-sm"
+              placeholder="+10.00 or -5.00" style="max-width: 140px;">
+            <button type="submit" class="btn btn-sm btn-primary">Save</button>
+          </form>
+        </td>
+        <td>
+          <button class="btn btn-primary btn-sm" data-bs-toggle="modal"
+            data-bs-target="#orderModal{{ u.id }}">View History</button>
+        </td>
+      </tr>
+      {% endfor %}
       {% else %}
-        <tr>
-          <td colspan="7">No users found.</td>
-        </tr>
+      <tr>
+        <td colspan="7">No users found.</td>
+      </tr>
       {% endif %}
     </tbody>
   </table>
-</div>
-{% endblock %}
+
+  {% for u, a in rows %}
+  <div class="modal fade" id="orderModal{{ u.id }}" tabindex="-1" aria-labelledby="orderModalLabel{{ u.id }}"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="orderModalLabel{{ u.id }}">{{ u.first_name }} {{ u.last_name }}'s activity</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          {% if a.orders and a.orders|length > 0 %}
+          <table class="table table-hover table-bordered table-sm mb-0">
+            <thead>
+              <tr>
+                <th>Stock ID</th>
+                <th>Type</th>
+                <th>Executed At</th>
+                <th>Quantity</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for o in a.orders %}
+              <tr>
+                <td>{{ o.stock_id }}</td>
+                <td>{{ o.buy_or_sell }}</td>
+                <td>{{ o.executed_at.strftime('%Y-%m-%d %H:%M:%S') if o.executed_at else '—' }}</td>
+                <td>{{ "%.2f"|format(o.quantity or 0) }}</td>
+                <td>{{ o.status }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <p class="mb-0">No orders found for this user.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+  {% endblock %}

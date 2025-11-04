@@ -48,7 +48,7 @@ with app.app_context(): # Create database tables
 #tables
 class Accounts(db.Model):  # Accounts model
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False) 
 
     status = db.Column(
         SET("Banned", "Active", "FlaggedAccount"),
@@ -60,7 +60,7 @@ class Accounts(db.Model):  # Accounts model
     created_at = db.Column(db.DateTime, default=datetime.utcnow) # removed foreign key constraint because it wouldnt let me run app.py idk why
 
     account_number = db.Column(db.String(20), unique=True, nullable=False)
-
+    
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String(100), unique=True, nullable=False)
@@ -72,11 +72,10 @@ class User(db.Model, UserMixin):
     last_login_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
     role = db.Column(db.String(10), nullable=False, default='user')  # 'user' or 'admin'
 
-
 class stock_orders(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     account_id = db.Column(db.Integer, db.ForeignKey('accounts.id'),nullable=False)
-    stock_id = db.Column(db.Integer, db.ForeignKey('stocks.id'),nullable=False)
+    stock_id = db.Column(db.Integer, db.ForeignKey('stocks.id', ondelete='CASCADE'), nullable=False)
     buy_or_sell = db.Column(db.String(80),nullable=False)
     order_type = db.Column(db.String(120),nullable=False)
     quantity = db.Column(db.Integer, nullable=False)
@@ -96,6 +95,7 @@ class Stocks(db.Model):  # Stock model for stock data
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_update = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    stock_orders = db.relationship('stock_orders', backref='stock', cascade="all, delete, delete-orphan", passive_deletes=True)
 
 class Market_schedule(db.Model):  # Market schedule model
     id = db.Column(db.Integer, primary_key=True)
@@ -123,7 +123,7 @@ class Account_History(db.Model):
 
 class Price_ticks(db.Model):  # Price ticks model
     id = db.Column(db.Integer, primary_key=True)
-    stock_id = db.Column(db.Integer, db.ForeignKey('stocks.id'),  nullable=False)
+    stock_id = db.Column(db.Integer, db.ForeignKey('stocks.id', ondelete='CASCADE'),  nullable=False)
     timestamp = db.Column(db.DateTime)
     price = db.Column(db.Float, nullable=False)
 
@@ -251,36 +251,61 @@ def frontend_files(filename):
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        # Redirect based on role if already logged in
-        if current_user.role == 'admin':
+        account = Accounts.query.filter_by(user_id=current_user.id).first()
+        if not account:
+            account = Accounts(
+                user_id=current_user.id,
+                status="Active",
+                cash_balance=0.0,
+                account_number=f"ACCT-{current_user.id:06d}",
+            )
+            db.session.add(account)
+            db.session.commit()
+    
+        if account.status == 'Banned':
+            flash('Your account is banned. Contact support.', 'danger')
+            logout_user()
+            return redirect(url_for('login'))
+        elif current_user.role == 'admin':
             return redirect(url_for('adminpanel'))
         else:
             return redirect(url_for('dashboard'))
-
+        
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
 
         user = User.query.filter_by(username=username).first()
+
         if user and check_password_hash(user.password, password):
+            account = Accounts.query.filter_by(user_id=user.id).first()
+            if account:
+                if "Banned" in account.status:
+                    flash('This account has been banned. Login denied.', 'danger')
+                    return redirect(url_for('login'))
+            if not account:
+                account = Accounts(
+                    user_id=current_user.id,
+                    status="Active",
+                    cash_balance=0.0,
+                    account_number=f"ACCT-{current_user.id:06d}",
+                )
+                db.session.add(account)
+                db.session.commit()
+
+            login_user(user)
             user.last_login_at = datetime.utcnow()
             db.session.commit()
-            login_user(user)
 
             next_page = request.args.get('next')
-
-            # Redirect based on role
             if user.role == 'admin':
                 return redirect(next_page or url_for('adminpanel'))
             else:
                 return redirect(next_page or url_for('dashboard'))
         else:
-            flash('Invalid username or password', 'danger')
+            flash('Invalid username or password.', 'danger')
 
     return render_template('login.html')
-
-
-
 
 @app.route('/logout')
 @login_required
@@ -313,7 +338,19 @@ def register():
         new_user = User(first_name=first_name, last_name=last_name, username=username, email=email, password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
-        flash('Registration successful! Please log in.', 'success')
+
+        login_user(new_user)
+
+        account = Accounts(
+            user_id=current_user.id,
+            status="Active",
+            cash_balance=0.0,
+            account_number=f"ACCT-{current_user.id:06d}",
+        )
+        db.session.add(account)
+        db.session.commit()
+
+        flash('Registration successful!', 'success')
         return redirect(url_for('dashboard'))
 
     return render_template('register.html')
@@ -996,7 +1033,13 @@ def adminsettings():
         rows_enriched.append((u, a))
 
     rows = rows_enriched
-    return render_template("adminsettings.html", rows=rows)
+    account = Accounts.query.filter_by(user_id=current_user.id).first()
+    entries = (Account_History.query
+               .filter_by(account_id=account.id)
+               .order_by(Account_History.timestamp.desc())
+               .all()) 
+    
+    return render_template("adminsettings.html", rows=rows, entries=entries)
 
 # --- UPDATE (status/cash) ---
 @app.route("/admin/update/<int:user_id>", methods=["POST"])

@@ -9,8 +9,6 @@
     <tr>
       <th>Date</th>
       <th>Action</th>
-      <th>Stock</th>
-      <th>Quantity</th>
       <th>Amount</th>
       <th>Balance After</th>
       <th>Note</th>
@@ -21,8 +19,6 @@
     <tr>
       <td>{{ e.timestamp.strftime("%Y-%m-%d %H:%M:%S") if e.timestamp else "" }}</td>
       <td>{{ e.action }}</td>
-      <td>{{ e.stock_symbol or "" }}</td>
-      <td>{{ e.quantity or "" }}</td>
       <td>{{ "%.2f"|format(e.amount) }}</td>
       <td>{{ "%.2f"|format(e.balance_after) }}</td>
       <td>{{ e.note or "" }}</td>
