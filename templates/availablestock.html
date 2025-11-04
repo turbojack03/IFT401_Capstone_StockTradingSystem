@@ -3,65 +3,60 @@
 
 {% block content %}
 <div class="container mt-4">
-<div class="d-flex align-items-center justify-content-between mb-3">
-  <h1 class="h3 m-0">Available Stocks</h1>
-  <form class="d-flex gap-2" method="GET" action="{{ url_for('availablestock') }}">
-    <input id="searchInput"
-           name="q"
-           class="form-control"
-           type="search"
-           placeholder="Search by symbol or name"
-           value="{{ search or '' }}"
-           aria-label="Search">
-  </form>
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h1 class="h3 m-0">Available Stocks</h1>
+    <form class="d-flex gap-2" method="GET" action="{{ url_for('availablestock') }}">
+      <input id="searchInput" name="q" class="form-control" type="search" placeholder="Search by symbol or name"
+        value="{{ search or '' }}" aria-label="Search">
+    </form>
+  </div>
 </div>
-  </div>
 
-  <div class="card shadow-sm">
-    <div class="card-body p-0">
-      <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-          <thead>
-            <tr>
-              <th style="width: 110px;">Symbol</th>
-              <th>Name</th>
-              <th class="text-end sortable" data-sort="price">Price</th>
-              <th class="text-end sortable" data-sort="percent">Change</th>
-              <th class="text-end d-none d-md-table-cell">Market Cap</th>
-              <th class="text-end d-none d-lg-table-cell">Volume</th>
-              <th class="text-end">Action</th>
-            </tr>
-          </thead>
-          <tbody id="stockTableBody">
-            {% for s in stocks %}
-            <tr data-sector="{{ s.sector|default('') }}">
-              <td><span class="badge text-bg-secondary">{{ s.symbol }}</span></td>
-              <td>{{ s.name }}</td>
-              <td class="text-end" data-price="{{ s.price|float }}">${{ "%.2f"|format(s.price) }}</td>
-              <td class="text-end fw-medium {{ 'text-success' if s.change >= 0 else 'text-danger' }}">{{
-                "%.2f"|format(s.change) }}%</td>
-              <td class="text-end d-none d-md-table-cell">{{ s.market_cap }}</td>
-              <td class="text-end d-none d-lg-table-cell">{{ s.volume }}</td>
-              <td class="text-end">
-                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#tradeModal"
-                  data-symbol="{{ s.symbol }}" data-name="{{ s.name }}" data-price="{{ s.price }}">
-                  Buy / Sell
-                </button>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-    <div class="card-footer d-flex justify-content-between align-items-center">
-      <small class="text-muted" id="rowCount">Showing 0 items</small>
-      <div class="btn-group" role="group" aria-label="Pagination">
-        <button class="btn btn-outline-secondary btn-sm" id="prevPage" disabled>Prev</button>
-        <button class="btn btn-outline-secondary btn-sm" id="nextPage" disabled>Next</button>
-      </div>
+<div class="card shadow-sm">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead>
+          <tr>
+            <th style="width: 110px;">Symbol</th>
+            <th>Name</th>
+            <th class="text-end sortable" data-sort="price">Price</th>
+            <th class="text-end sortable" data-sort="percent">Change</th>
+            <th class="text-end d-none d-md-table-cell">Market Cap</th>
+            <th class="text-end d-none d-lg-table-cell">Volume</th>
+            <th class="text-end">Action</th>
+          </tr>
+        </thead>
+        <tbody id="stockTableBody">
+          {% for s in stocks %}
+          <tr data-sector="{{ s.sector|default('') }}">
+            <td><span class="badge text-bg-secondary">{{ s.symbol }}</span></td>
+            <td>{{ s.name }}</td>
+            <td class="text-end" data-price="{{ s.price|float }}">${{ "%.2f"|format(s.price) }}</td>
+            <td class="text-end fw-medium {{ 'text-success' if s.change >= 0 else 'text-danger' }}">{{
+              "%.2f"|format(s.change) }}%</td>
+            <td class="text-end d-none d-md-table-cell">{{ s.market_cap }}</td>
+            <td class="text-end d-none d-lg-table-cell">{{ s.volume }}</td>
+            <td class="text-end">
+              <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#tradeModal"
+                data-symbol="{{ s.symbol }}" data-name="{{ s.name }}" data-price="{{ s.price }}">
+                Buy / Sell
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
   </div>
+  <div class="card-footer d-flex justify-content-between align-items-center">
+    <small class="text-muted" id="rowCount">Showing 0 items</small>
+    <div class="btn-group" role="group" aria-label="Pagination">
+      <button class="btn btn-outline-secondary btn-sm" id="prevPage" disabled>Prev</button>
+      <button class="btn btn-outline-secondary btn-sm" id="nextPage" disabled>Next</button>
+    </div>
+  </div>
+</div>
 </div>
 
 <!-- Trade Modal -->
@@ -85,7 +80,8 @@
 
           <div class="mb-3">
             <label for="stockSymbol" class="form-label">Stock Symbol:</label>
-            <input type="text" name="stockSymbol" id="stockSymbol" class="form-control" value="{{ selected_stock.ticker if selected_stock else '' }}" required>
+            <input type="text" name="stockSymbol" id="stockSymbol" class="form-control"
+              value="{{ selected_stock.ticker if selected_stock else '' }}" required>
           </div>
 
           <div class="mb-3">
@@ -111,6 +107,63 @@
         </form>
 
         <script>
+          // --- Pagination & Search ---
+          const rowsPerPage = 10;
+          let currentPage = 1;
+
+          const tableBody = document.getElementById('stockTableBody');
+          const allRows = Array.from(tableBody.querySelectorAll('tr'));
+          const rowCountLabel = document.getElementById('rowCount');
+          const prevBtn = document.getElementById('prevPage');
+          const nextBtn = document.getElementById('nextPage');
+          const searchInput = document.getElementById('searchInput');
+
+          let filteredRows = allRows.slice();
+
+          function renderTable() {
+            const start = (currentPage - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+
+            // Hide all rows first
+            allRows.forEach(row => row.style.display = 'none');
+
+            // Show only filtered rows for the current page
+            filteredRows.slice(start, end).forEach(row => row.style.display = '');
+
+            rowCountLabel.textContent = `Showing ${Math.min(end, filteredRows.length)} of ${filteredRows.length} items`;
+
+            prevBtn.disabled = currentPage === 1;
+            nextBtn.disabled = end >= filteredRows.length;
+          }
+
+          prevBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+              currentPage--;
+              renderTable();
+            }
+          });
+
+          nextBtn.addEventListener('click', () => {
+            if ((currentPage * rowsPerPage) < filteredRows.length) {
+              currentPage++;
+              renderTable();
+            }
+          });
+
+          searchInput.addEventListener('input', () => {
+            const query = searchInput.value.toLowerCase().trim();
+            filteredRows = allRows.filter(row => {
+              const symbol = row.querySelector('td:first-child').textContent.toLowerCase();
+              const name = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+              return symbol.includes(query) || name.includes(query);
+            });
+            currentPage = 1; // reset to first page
+            renderTable();
+          });
+
+          renderTable();
+
+          // --- Trade Modal ---
           function setBuySell(type) {
             document.getElementById("buy_or_sell").value = type;
             document.getElementById("btnBuy").classList.toggle("btn-success", type === "BUY");
@@ -136,15 +189,11 @@
             const btn = event.relatedTarget;
             const symbol = btn.getAttribute('data-symbol');
             const price = parseFloat(btn.getAttribute('data-price'));
-
             document.getElementById('stockSymbol').value = symbol;
-
-            // Update latestPrice for total cost calculation
             latestPrice = price;
             updateTotalCost();
           });
 
-          // Initialize total cost on page load
           updateTotalCost();
         </script>
       </div>

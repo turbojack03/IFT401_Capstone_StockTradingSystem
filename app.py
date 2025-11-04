@@ -33,7 +33,7 @@ import json
 
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://admin:password@database-1.ct6es408kgrf.us-east-2.rds.amazonaws.com/stock_db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:password@localhost/new_db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'your-secret-key'
 bootstrap = Bootstrap5(app)
@@ -82,7 +82,7 @@ class stock_orders(db.Model):
     executed_at = db.Column(db.DateTime, nullable=True)
     status = db.Column(db.String(80),nullable=False, default="Pending")
     date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-
+    
 class Stocks(db.Model):  # Stock model for stock data
     id = db.Column(db.Integer, primary_key=True)
     ticker = db.Column(db.String(5), unique=True, nullable=False)
@@ -96,7 +96,7 @@ class Stocks(db.Model):  # Stock model for stock data
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_update = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     stock_orders = db.relationship('stock_orders', backref='stock', cascade="all, delete, delete-orphan", passive_deletes=True)
-
+    
 class Market_schedule(db.Model):  # Market schedule model
     id = db.Column(db.Integer, primary_key=True)
     open_time = db.Column(db.Time, nullable=False)
@@ -107,9 +107,9 @@ class Market_schedule(db.Model):  # Market schedule model
 #*****************Working**************8
 class Account_History(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-    account_id = db.Column(db.Integer, db.ForeignKey("accounts.id"), nullable=False)
-    order_id = db.Column(db.Integer, db.ForeignKey('stock_orders.id'), nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete='CASCADE'), nullable=False)
+    account_id = db.Column(db.Integer, db.ForeignKey("accounts.id", ondelete='CASCADE'), nullable=False)
+    order_id = db.Column(db.Integer, db.ForeignKey('stock_orders.id', ondelete='SET NULL'), nullable=True)
     action = db.Column(db.String(20), nullable=False)  # BUY, SELL, DEPOSIT, WITHDRAW
     stock_symbol = db.Column(db.String(10), nullable=True)
     quantity = db.Column(db.Integer, nullable=True)
@@ -358,7 +358,6 @@ def register():
 
 def is_market_open(now=None):
     market = Market_schedule.query.first()
-    
     if not market:
         return True
 
@@ -367,22 +366,28 @@ def is_market_open(now=None):
 
     if not market.open_time or not market.close_time:
         return True
-    
+
     today = now.date()
     holiday = holidays.US(years=today.year)
-
     if today in holiday:
         return False
-    
-    current_day = now.weekday() 
-    open_days = [int(d.strip()) for d in market.open_days.split(",")]
-    
+
+    current_day = now.weekday()
+
+    if not market.open_days:
+        return False
+
+    try:
+        open_days = [int(d.strip()) for d in market.open_days.split(",") if d.strip().isdigit()]
+    except:
+        return False
+
     if current_day not in open_days:
         return False
-    
+
     open_time = market.open_time
     close_time = market.close_time
-    
+
     if open_time <= close_time:
         return open_time <= current_time <= close_time
 
@@ -547,10 +552,12 @@ def portfolio():
     account = Accounts.query.filter_by(user_id=current_user.id).first()
     if not account:
         flash("No account found for this user.", "warning")
-        return render_template("portfolio.html", portfolio=[], pending_orders=[], executed_orders=[])
+        return render_template("portfolio.html", portfolio=[], pending_orders=[], executed_orders=[], data_json="[]")
 
+    # Fetch all orders for this account
     orders = stock_orders.query.filter_by(account_id=account.id).all()
 
+    # Build portfolio summary
     portfolio_data = []
     total_investment = 0
     total_value = 0
@@ -561,6 +568,7 @@ def portfolio():
         if not stock:
             continue
 
+        # Get latest price
         latest_tick = Price_ticks.query.filter_by(stock_id=stock.id).order_by(Price_ticks.timestamp.desc()).first()
         current_price = latest_tick.price if latest_tick else stock.initial_price
 
@@ -568,32 +576,40 @@ def portfolio():
             stock_dict[stock.id] = {
                 "symbol": stock.ticker,
                 "shares": 0,
-                "investment": 0.0,
+                "total_cost": 0.0,
                 "current_price": current_price
             }
 
         qty = order.quantity
-        stock_dict[stock.id]["shares"] += qty if order.buy_or_sell == "BUY" else -qty
-        stock_dict[stock.id]["investment"] += qty * current_price if order.buy_or_sell == "BUY" else -qty * current_price
+        # Get executed price from Account_History
+        history_entry = Account_History.query.filter_by(order_id=order.id).first()
+        executed_price = abs(history_entry.amount / history_entry.quantity) if history_entry and history_entry.quantity else current_price
 
+        if order.buy_or_sell == "BUY":
+            stock_dict[stock.id]["shares"] += qty
+            stock_dict[stock.id]["total_cost"] += executed_price * qty
+        elif order.buy_or_sell == "SELL":
+            stock_dict[stock.id]["shares"] -= qty
+            stock_dict[stock.id]["total_cost"] -= executed_price * qty
+
+    # Summarize portfolio
     for s in stock_dict.values():
-        if s["shares"] <= 0:
-            continue
         current_value = s["shares"] * s["current_price"]
-        profit_loss = current_value - s["investment"]
-        total_investment += s["investment"]
-        total_value += current_value
+        profit_loss = current_value - s["total_cost"]
+        total_investment += max(s["total_cost"], 0)
+        total_value += max(current_value, 0)
 
         portfolio_data.append({
             "symbol": s["symbol"],
             "current_price": s["current_price"],
             "shares": s["shares"],
-            "investment": s["investment"],
+            "investment": s["total_cost"],
             "profit_loss": profit_loss
         })
 
     total_pl = total_value - total_investment
 
+    # --- Pending Orders ---
     pending_orders_query = (
         stock_orders.query
         .filter_by(account_id=account.id, status="Pending")
@@ -601,14 +617,9 @@ def portfolio():
         .add_entity(Stocks)
         .all()
     )
+    pending_orders = [order for order, stock in pending_orders_query]
 
-    pending_orders = []
-    for order, stock in pending_orders_query:
-        order.stock = stock
-        pending_orders.append(order)
-    
-
-
+    # --- Executed Orders ---
     executed_orders_query = (
         stock_orders.query
         .filter_by(account_id=account.id, status="Executed")
@@ -619,20 +630,32 @@ def portfolio():
 
     executed_orders = []
     stock_data = []
+
     for order, stock in executed_orders_query:
         order.stock = stock
+        # Get executed price
+        history_entry = Account_History.query.filter_by(order_id=order.id).first()
+        order.executed_price = history_entry.amount if history_entry else None
+
         executed_orders.append(order)
-        
-        stock_item = {
+        stock_data.append({
             "ticker": stock.ticker,
             "quantity": order.quantity
-        }
-        stock_data.append(stock_item)
+        })
 
+    # Always define data_json, even if empty
     data_json = json.dumps(stock_data)
 
-    return render_template("portfolio.html", portfolio=portfolio_data, total_investment=total_investment, total_value=total_value, total_pl=total_pl, pending_orders=pending_orders, executed_orders=executed_orders, data_json=data_json)
-
+    return render_template(
+        "portfolio.html",
+        portfolio=portfolio_data,
+        total_investment=total_investment,
+        total_value=total_value,
+        total_pl=total_pl,
+        pending_orders=pending_orders,
+        executed_orders=executed_orders,
+        data_json=data_json
+    )
 
 @app.route('/availablestock', methods=["GET", "POST"])
 @login_required
@@ -1121,7 +1144,7 @@ def force_close():
         db.session.rollback()
         flash(f"Failed to delete close market: {e}", "danger")
 
-    return redirect(url_for("adminpanel"))
+    return redirect(url_for("schedule"))
 
 @app.route("/update_cash", methods=["POST"])
 @login_required
