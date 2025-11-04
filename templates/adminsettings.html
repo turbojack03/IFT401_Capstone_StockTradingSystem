@@ -102,10 +102,19 @@
                 <td>{{ o.executed_at.strftime('%Y-%m-%d %H:%M:%S') if o.executed_at else '—' }}</td>
                 <td>{{ "%.2f"|format(o.quantity or 0) }}</td>
                 <td>{{ o.status }}</td>
+              <td>
+        {% if o.status == 'Pending' %}  
+         <form method="post" action="{{ url_for('admin_execute_order', order_id=o.id) }}" class="d-inline" style="background: transparent !important; box-shadow: none !important;">
+                      <button type="submit" class="btn btn-sm btn-primary">Execute</button>
+                    </form>
+                  {% else %}
+                  <span class="text-muted">-</span>
+                  {% endif %}
+                </td>
               </tr>
               {% endfor %}
             </tbody>
-          </table>
+          </table>          
           {% else %}
           <p class="mb-0">No orders found for this user.</p>
           {% endif %}

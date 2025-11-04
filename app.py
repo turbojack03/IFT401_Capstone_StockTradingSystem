@@ -1012,6 +1012,7 @@ def adminsettings():
                 stock_orders.executed_at,
                 stock_orders.quantity,
                 stock_orders.status,
+                stock_orders.id,
             )
             .filter(stock_orders.account_id == a.id)        # add .filter(stock_ORders.status == "Pending") to limit
             .order_by(desc(stock_orders.executed_at))       # newest first; NULLs last naturally in MySQL 8
@@ -1022,6 +1023,7 @@ def adminsettings():
         a_orders = []
         for o in orders:
             a_orders.append({
+                "id":          o.id,
                 "stock_id":    o.stock_id,
                 "buy_or_sell": o.buy_or_sell,
                 "executed_at": o.executed_at,              # can be None for not-yet-executed
@@ -1217,12 +1219,64 @@ def inject_cash_balance():
 
 
 
+@app.route("/admin/execute_order/<int:order_id>", methods=["POST"])
+@login_required
+@admin_required
+def admin_execute_order(order_id):
+    from datetime import datetime
+    order = stock_orders.query.get_or_404(order_id)
+    if order.status != "Pending":
+        return redirect(url_for("adminsettings"))
+    
+    account = Accounts.query.get(order.account_id)
+    stock = Stocks.query.get(order.stock_id)
+    if not account or not stock:
+        return redirect(url_for("adminsettings"))
+    
+    latest_tick = (
+            Price_ticks.query
+            .filter_by(stock_id=stock.id)
+            .order_by(Price_ticks.timestamp.desc())
+            .first()
+    )
+    current_price = latest_tick.price if latest_tick else stock.initial_price
+    total_value = current_price * order.quantity
 
-
-
-
-
-
+    try:
+        if order.buy_or_sell =="BUY":
+            if account.cash_balance >= total_value:
+                account.cash_balance -= total_value
+                order.status ="Executed"
+                order.executed_at = datetime.utcnow()
+                log_activity(account, "BUY", -total_value,
+                             stock_symbol=stock.ticker,
+                             quantity=order.quantity,
+                             order_id=order.id,
+                             note="Manual execute (admin)")
+            else:
+                order.status ="Failed"
+                order.executed_at = datetime.utcnow()
+                log_activity(account, "BUY_FAILED", 0,
+                             stock_symbol=stock.ticker,
+                             quantity=order.quantity,
+                             order_id=order.id,
+                             note="Manual execute (admin) failed: insufficient funds")
+        elif order.buy_or_sell == "SELL":
+            account.cash_balance += total_value
+            order.status = "Executed"
+            order.executed_at = datetime.utcnow()
+            log_activity(account, "SELL", total_value,
+                             stock_symbol=stock.ticker,
+                             quantity=order.quantity,
+                             order_id=order.id,
+                             note="Manual execute (admin)")
+        db.session.commit()
+        flash(f"Order {order.id} executed at ${current_price:.2f}.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Failed to execute order {order.id}: {e}", "danger")
+    return redirect(url_for("adminsettings"))
+                            
 
 
 if __name__ == "__main__":
