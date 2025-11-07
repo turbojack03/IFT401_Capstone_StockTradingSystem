@@ -18,7 +18,7 @@
 from apscheduler.schedulers.background import BackgroundScheduler 
 from pathlib import Path
 from flask import Flask, render_template, redirect, url_for, flash, request, send_from_directory, jsonify, render_template_string
-from flask_bootstrap import Bootstrap5  # or Bootstrap if that's the version you installed
+from flask_bootstrap import Bootstrap  # or Bootstrap if that's the version you installed
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import or_ 
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -36,7 +36,7 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://admin:password@stock-app-rds.cv2g6i20c963.us-east-2.rds.amazonaws.com/stockapp_db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'your-secret-key'
-bootstrap = Bootstrap5(app)
+bootstrap = Bootstrap(app)
 
 db = SQLAlchemy(app)  #lets u interact with the database
 
@@ -134,7 +134,7 @@ with app.app_context(): # Create database tables
 # price sim simulator
 import price_simulator
 # change the interval 
-start_simulator = price_simulator.attach(app, db, Stocks, Price_ticks, interval_seconds=5.0, verbose=True)
+start_simulator = price_simulator.attach(app, db, Stocks, Price_ticks, interval_seconds=30.0, verbose=True)
 
 _first_time = True
 
