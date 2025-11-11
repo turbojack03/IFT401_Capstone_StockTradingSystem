@@ -33,6 +33,7 @@ import json
 
 
 app = Flask(__name__)
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:password@localhost/stock_db'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://admin:password@stock-app-rds.cv2g6i20c963.us-east-2.rds.amazonaws.com/stockapp_db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'your-secret-key'
@@ -491,19 +492,17 @@ def dashboard():
         latest_ticks = (
             Price_ticks.query
             .filter_by(stock_id=s.id)
-            .order_by(Price_ticks.timestamp.desc())
-            .limit(2)
+            .order_by(Price_ticks.timestamp.asc())
             .all()
         )
 
         current_price = s.initial_price
         percent_change = 0.0
         if latest_ticks:
-            current_price = latest_ticks[0].price
-            if len(latest_ticks) > 1:
-                previous_price = latest_ticks[1].price
-                if previous_price != 0:
-                    percent_change = ((current_price - previous_price) / previous_price) * 100
+            oldest_price = latest_ticks[0].price
+            current_price = latest_ticks[-1].price
+            if oldest_price != 0:
+                percent_change = ((current_price - oldest_price) / oldest_price) * 100
 
         market_cap = current_price * s.volume
 
