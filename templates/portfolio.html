@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+
+    <!-- Top summary + chart section -->
+    <div style="display: flex; gap: 40px; align-items: flex-start; margin-bottom: -30px;">
+
+        <!-- Left: Portfolio summary -->
+        <div style="flex: 0 0 65%; min-width: 300px;">
+            <h2 style="margin-bottom: 40px;">My Portfolio</h2>
+            <h4 style="margin-bottom: 20px;">Total Investment: ${{ "%.2f"|format(total_investment) }}</h4>
+            <h4 style="margin-bottom: 20px;">Total Value: ${{ "%.2f"|format(total_value) }}</h4>
+            <h4 class="{% if total_pl >= 0 %}text-success{% else %}text-danger{% endif %}" style="margin-bottom: 20px;">
+                Net P/L: ${{ "%.2f"|format(total_pl) }}
+            </h4>
+        </div>
+
+
+        <!-- Right: Pie chart -->
+        <div style="flex: 0 0 35%; min-width: 250px; display: flex; justify-content: flex-end;">
+            <div id="piechart" style="width: 100%; height: 400px;"></div>
+        </div>
+
+    </div>
+
+    <!-- Portfolio table -->
+    <h3>My Stocks</h3>
+    {% if portfolio %}
+    <table class="table table-hover table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th scope="col">Stock</th>
+                <th scope="col">Current price</th>
+                <th scope="col">Shares</th>
+                <th scope="col">Investment</th>
+                <th scope="col">Total P/L</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for stock in portfolio %}
+            <tr>
+                <td>{{ stock.symbol }}</td>
+                <td>${{ "%.2f"|format(stock.current_price) }}</td>
+                <td>{{ "%.2f"|format(stock.shares) }}</td>
+                <td>${{ "%.2f"|format(stock.investment) }}</td>
+                <td class="{% if stock.profit_loss >= 0 %}text-success{% else %}text-danger{% endif %}">
+                    ${{ "%.2f"|format(stock.profit_loss) }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>You currently have no stocks in your portfolio.</p>
+    {% endif %}
+
+    <!-- Pending and executed orders as before -->
+    <h2 class="mb-4 mt-5">Pending Transactions</h2>
+    {% if pending_orders %}
+    <table class="table table-hover table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th scope="col">Stock</th>
+                <th scope="col">Order Type</th>
+                <th scope="col">Buy/Sell</th>
+                <th scope="col">Quantity</th>
+                <th scope="col">Status</th>
+                <th scope="col">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in pending_orders %}
+            <tr>
+                <td>{{ order.stock.ticker }}</td>
+                <td>{{ order.order_type }}</td>
+                <td>{{ order.buy_or_sell }}</td>
+                <td>{{ order.quantity }}</td>
+                <td>{{ order.status }}</td>
+                <td>
+                    <form method="POST" action="{{ url_for('cancel_order', order_id=order.id) }}">
+                        <button type="submit" class="btn btn-sm btn-danger">Cancel</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No pending transactions.</p>
+    {% endif %}
+
+    <h2 class="mb-4 mt-5">Previous transactions</h2>
+    {% if executed_orders %}
+    <table class="table table-hover table-bordered table-sm mb-0">
+        <thead class="table-dark">
+            <tr>
+                <th>Stock</th>
+                <th>Type</th>
+                <th>Buy/Sell</th>
+                <th>Quantity</th>
+                <th>Time</th>
+                <th>Price</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in executed_orders %}
+            <tr>
+                <td>{{ order.stock.ticker }}</td>
+                <td>{{ order.order_type }}</td>
+                <td>{{ order.buy_or_sell }}</td>
+                <td>{{ order.quantity }}</td>
+                <td>
+                    {% if order.executed_at %}
+                    {{ order.executed_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                    {% else %}
+                    —
+                    {% endif %}
+                </td>
+                <td>{{ order.executed_price }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="mb-0">No previous transactions</p>
+    {% endif %}
+
+</div>
+
+<!-- Google Charts script -->
+<script type="text/javascript">
+    const portfolioData = JSON.parse('{{ data_json | safe }}');
+    const dataArray = [['Stock', 'Quantity']];
+    portfolioData.forEach(item => {
+        dataArray.push([item.ticker, item.quantity]);
+    });
+
+    google.charts.load('current', { packages: ['corechart'] });
+    google.charts.setOnLoadCallback(function () {
+        const chartData = google.visualization.arrayToDataTable(dataArray);
+        const chart = new google.visualization.PieChart(document.getElementById('piechart'));
+
+        const options = {
+            title: 'Portfolio',
+            is3D: true,
+            width: 400,
+            height: 400,
+            chartArea: {       // reduces whitespace around the chart
+                left: 0,
+                top: 0,
+                width: '100%',
+                height: '100%'
+            },
+            backgroundColor: { fill: 'transparent', stroke: 'none' }, // removes any background
+            legend: { textStyle: { color: '#f1f1f1' } },
+            titleTextStyle: { color: '#f1f1f1', fontSize: 18 },
+            pieSliceTextStyle: { color: '#f1f1f1', fontSize: 14 },
+            slices: {
+                0: { color: '#198754' },
+                1: { color: '#53f768' },
+                2: { color: '#1c1c1c' },
+                3: { color: '#2d2d2d' },
+                4: { color: '#76ff76' },
+                5: { color: '#0d6efd' }
+            }
+        };
+
+
+        chart.draw(chartData, options);
+    });
+</script>
+
+{% endblock %}

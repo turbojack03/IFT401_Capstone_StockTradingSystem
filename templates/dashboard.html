@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<div class="flash-messages">
+  {% for category, message in messages %}
+  <div class="alert alert-{{ category }}">
+    {{ message }}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+
+<div class="container mt-4">
+  <div class="row mb-4">
+    <div class="col-md-6">
+      {% if selected_stock and selected_stock_prices %}
+      <div style="height: 70vh; width: 100%;">
+        <canvas id="priceChart"></canvas>
+      </div>
+
+      <script>
+        const priceData = JSON.parse('{{ selected_stock_prices | tojson | safe }}');
+        const timestamps = priceData.map(p => p.timestamp);
+        const prices = priceData.map(p => p.price);
+
+        const data = {
+          labels: timestamps,
+          datasets: [{
+            label: '{{ selected_stock.ticker }}',
+            backgroundColor: '#53f768',
+            borderColor: 'rgba(83, 247, 104, 0.2)',
+            data: prices,
+            pointRadius: 0,
+            tension: 0.3
+          }]
+        };
+
+        const config = {
+          type: 'line',
+          data: data,
+          options: { maintainAspectRatio: false }
+        };
+
+        const priceChart = new Chart(
+          document.getElementById('priceChart'),
+          config
+        );
+      </script>
+      {% endif %}
+    </div>
+
+    <!-- Order Form -->
+    <div class="col-md-6">
+      <h4>Order Ticket</h4>
+      <form method="POST" action="{{ url_for('dashboard') }}">
+        <div class="mb-3 text-center">
+          <button type="button" id="btnBuy" style="width: 130px;" class="btn btn-outline-success"
+            onclick="setBuySell('BUY')">Buy</button>
+          <button type="button" id="btnSell" style="width: 130px;" class="btn btn-outline-danger"
+            onclick="setBuySell('SELL')">Sell</button>
+          <input type="hidden" name="buy_or_sell" id="buy_or_sell" required>
+        </div>
+
+        <div class="mb-3">
+          <label for="stockSymbol" class="form-label">Stock Symbol:</label>
+          <input type="text" name="stockSymbol" id="stockSymbol" class="form-control"
+            value="{{ selected_stock.ticker if selected_stock else '' }}" required>
+        </div>
+
+        <div class="mb-3">
+          <label for="orderType" class="form-label">Order Type:</label>
+          <select name="orderType" id="orderType" class="form-select" required>
+            <option value="Market">Market</option>
+            <option value="Limit">Limit</option>
+            <option value="Stop">Stop</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label for="quantity" class="form-label">Quantity:</label>
+          <input type="number" name="quantity" id="quantity" class="form-control" min="1" value="1" required>
+        </div>
+
+<div class="mb-3">
+      <label class="form-label">Total Cost:</label>
+      <input type="text" id="totalCost" class="form-control" value="0.00" readonly>
+    </div>
+
+    <button type="submit" class="btn btn-success w-100">Submit Order</button>
+  </form>
+
+  <script>
+    function setBuySell(type) {
+      document.getElementById("buy_or_sell").value = type;
+      document.getElementById("btnBuy").classList.toggle("btn-success", type === "BUY");
+      document.getElementById("btnBuy").classList.toggle("btn-outline-success", type !== "BUY");
+      document.getElementById("btnSell").classList.toggle("btn-danger", type === "SELL");
+      document.getElementById("btnSell").classList.toggle("btn-outline-danger", type !== "SELL");
+    }
+
+    const latestPrice = ('{{ selected_stock_prices[-1].price if selected_stock_prices else selected_stock.initial_price if selected_stock else 0.0 }}')
+    const quantityInput = document.getElementById('quantity');
+    const totalCostInput = document.getElementById('totalCost');
+    
+    function updateTotalCost() {
+      const qty = parseInt(quantityInput.value) || 0;
+      const total = latestPrice * qty;
+      totalCostInput.value = total.toFixed(2);
+    }
+
+    quantityInput.addEventListener('input', updateTotalCost);
+
+    updateTotalCost();
+  </script>
+</div>
+
+  </div>
+
+  <!-- Bottom row: Top Stocks Table -->
+  <div class="row">
+    <div class="col-12">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th scope="col">Symbol</th>
+            <th scope="col">Name</th>
+            <th scope="col">Price</th>
+            <th scope="col">Change</th>
+            <th scope="col">Volume</th>
+            <th scope="col">Market Cap</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for stock in stocks %}
+          <tr>
+            <td>
+              <a href="{{ url_for('dashboard', selected_stock=stock.symbol) }}"
+                style="text-decoration:none; color:#0bb343;">
+                {{ stock.symbol }}
+              </a>
+            </td>
+            <td>{{ stock.name }}</td>
+            <td>${{ "%.2f"|format(stock.price) }}</td>
+            <td>{{ "%.2f"|format(stock.change) }}%</td>
+            <td>{{ stock.volume }}</td>
+            <td>{{ stock.market_cap }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

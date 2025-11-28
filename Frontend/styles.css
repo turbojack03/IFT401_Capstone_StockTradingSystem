@@ -1,0 +1,525 @@
+/* ===== Base Layout ===== */
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Comic Sans MS";
+  background:
+    radial-gradient(1200px 600px at 90% -10%, rgba(10,132,255,.06), transparent 60%),
+    radial-gradient(900px 500px at -10% 100%, rgba(52,199,89,.06), transparent 60%),
+    var(--bg);
+  color: #1c1c1e;
+  line-height: 1.6;
+}
+html, body { height: 100%; }
+
+
+/* ===== HIDDEN NAVBAR LINKS ===== */
+.navbar .nav-link.hidden {
+  color: #212529;   /* same as navbar background */
+ 
+}
+
+
+.nav-cash {
+  background-color: #198754; /* Bootstrap green */
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: 500;
+  padding-right: 30px;
+}
+
+
+main {
+  flex: 1;  /* pushes footer down */
+  padding-left: 30px;
+  padding-right: 30px;
+}
+
+
+
+
+
+
+/* ===== Navbar ===== */
+.navbar {
+  border-radius: 0 0 1rem 1rem; /* Curvy bottom corners */
+  color: rgba(16, 209, 42, 0.671);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+  font-size: 1.2rem;
+  position: relative;
+}
+
+
+/* ===== Footer ===== */
+footer {
+  margin-top: auto;
+}
+
+
+/* ===== Headings ===== */
+h1, h2, h3, h4, h5 {
+  font-weight: 600;
+  letter-spacing: -0.5px;
+  margin-bottom: 1rem;
+}
+
+
+/* ===== Forms ===== */
+form {
+  background: linear-gradient(#53f768, #15b830); ;
+  padding: 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 24px 24px rgba(0,0,0,0.06);
+}
+
+
+input.form-control {
+  border-radius: 0.75rem;
+  border: 1px solid #d2d2d7;
+  padding: 0.75rem 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+
+input.form-control:focus {
+  border-color: #0071e3; /* Apple Blue */
+  box-shadow: 0 0 0 3px rgba(0,113,227,0.3);
+  outline: none;
+}
+
+
+button.btn {
+  border-radius: 0.75rem;
+  padding: 0.6rem 1.2rem;
+  font-weight: 500;
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+
+button.btn-primary {
+  filter: brightness(1.02);
+  box-shadow: 0 6px 16px rgba(10,132,255,.30);
+}
+
+
+button.btn-primary:hover {
+  background-color: #005bb5;
+  transform: translateY(-2px);
+}  
+
+
+/* ===== Cards ===== */
+.card {
+  border-radius: 1rem;
+  overflow: hidden;
+  border: none;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+
+.container.mt-4 {
+  background-color: rgb(255, 255, 255);
+}
+
+
+/* ===== Tables ===== */
+/* Reminder2self: SWITCH TO BAMBOO LOGO AND NAME BECAUSE BAMBOO GROWS FAST LIKE STOCKS!!!! BIG BRAIN MOMENT */
+/* ===== Bamboo2 logo ===== */
+.navbar-brand img {
+  border-radius: 12px;  /* rounded corners */
+  vertical-align: middle; /* align with text */
+}
+ 
+
+/* ===== Bamboo stalks ===== */
+.bamboo {
+    position: fixed;       /* lock to viewport */
+    bottom: 70px;             /* always bottom edge */
+    width: auto;
+    height: 30vh;
+    max-height: 250px;
+    z-index: -1;
+    pointer-events: none;  /* so it doesn’t block clicks */
+}
+
+
+.left-bamboo {
+    left: 10px;            /* left corner */
+}
+
+
+.right-bamboo {
+    right: 10px;           /* right corner */
+    transform: scaleX(-1); /* mirror */
+}
+
+
+.signup-link:link {
+  color: green;
+  background-color: transparent;
+  text-decoration: none;
+}
+
+
+.signup-link:visited {
+  color: rgb(8, 117, 13);
+  background-color: transparent;
+  text-decoration: none;
+}
+
+
+.signup-link:hover {
+  color: rgb(14, 168, 22);
+  background-color: transparent;
+  text-decoration: underline;
+}
+
+
+.signup-link:active {
+  color: rgb(0, 0, 0);
+  background-color: transparent;
+  text-decoration: underline;
+}
+
+
+/* ==== Styles for signup ===== */
+.form-control {
+  font-size: 1.1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid #d2d2d7;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+
+.form-label {
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+
+.valid-feedback {
+  font-size: 0.9rem;
+  color: #28a745; /* Bootstrap green */
+}
+
+
+.invalid-feedback {
+  font-size: 0.9rem;
+  color: #dc3545; /* Bootstrap red */
+}
+
+
+.form-check-input {
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-right: 0.5rem;
+}
+
+
+
+
+/* ===== Buy/Sell Buttons ===== */
+.buttonbuy {
+  background-color: #28a745; /* Green */
+  border: none;
+  margin-left: 30px;
+  padding-bottom:50px;
+  text-align:center;
+  font-size: 25px;
+  line-height: 50px;
+  font-family:"Comic Sans MS";
+ 
+}
+.buttonbuy:hover {
+  background-color: #218838; /* Darker green */
+}
+.buttonbuy:active {
+  background-color: #1e7e34; /* Even darker green */
+}
+.buttonsell {
+  background-color: #dc3545; /* Red */
+  border: none;
+  margin-right: 30px;
+  padding-bottom: 50px;
+  text-align:center;
+  font-size: 25px;
+  line-height: 50px;
+  font-family:"Comic Sans MS";
+ 
+
+
+}
+.buttonsell:hover {
+  background-color: #c82333; /* Darker red */
+}
+.buttonsell:active {
+  background-color: #bd2130; /* Even darker red */
+}
+
+/* ====== Modern Admin Panel Styles (Apple-like) ====== */
+:root{
+  --bg: #f5f7fb;
+  --bg-elev: #ffffff;
+  --text: #0f1115;
+  --muted: #6b7280;
+  --primary: #0a84ff;
+  --primary-600:#0076f3;
+  --primary-700:#0065d0;
+  --accent: #34c759;
+  --danger:#ff3b30;
+  --warning:#ffcc00;
+  --border: #e5e7eb;
+  --ring: rgba(10,132,255,.35);
+  --shadow: 0 10px 25px rgba(0,0,0,.06), 0 2px 6px rgba(0,0,0,.06);
+  --radius: 16px;
+  --radius-sm: 12px;
+  --radius-xs: 10px;
+  --gap: 16px;
+}
+
+/* Base layout */
+html, body {
+  height: 100%;
+}
+
+body{
+  margin:0;
+  background:
+    radial-gradient(1200px 600px at 90% -10%, rgba(10,132,255,.06), transparent 60%),
+    radial-gradient(900px 500px at -10% 100%, rgba(52,199,89,.06), transparent 60%),
+    var(--bg);
+  color:var(--text);
+  font-family: -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji",sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height:1.4;
+}
+
+#adminpanel-content{
+  max-width: 18000px;
+  margin: 24px auto 80px;
+  padding: 0 20px;
+}
+
+/* Headings */
+h2{
+  font-size: clamp(1.6rem, 1.2rem + 1.2vw, 2rem);
+  font-weight: 700;
+  letter-spacing: -.01em;
+  margin: 8px 0 20px;
+}
+h3{
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0 0 14px;
+}
+h4, h5{
+  color: var(--muted);
+  font-weight: 600;
+  margin: 14px 0 10px;
+}
+
+/* Cards */
+.card{
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px;
+  margin: 18px 0;
+  backdrop-filter: saturate(130%) blur(6px);
+}
+
+/* Forms */
+form{
+  display: grid;
+  gap: 12px;
+}
+
+label{
+  font-size: .9rem;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="time"],
+textarea,
+select{
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  outline: none;
+  transition: box-shadow .18s ease, border-color .18s ease, transform .03s ease;
+}
+
+input::placeholder, textarea::placeholder{ color: #9aa3b2; }
+
+input:focus,
+textarea:focus,
+select:focus{
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--ring);
+}
+
+/* Grouped fields (hours) */
+.flex-group{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
+  gap: 12px;
+}
+
+/* Checkboxes / radios */
+input[type="checkbox"],
+input[type="radio"]{
+  accent-color: var(--primary);
+  width: 16px; height: 16px;
+  vertical-align: middle;
+  transform: translateY(-1px);
+}
+
+/* Buttons */
+button.primary,
+.update-rate-btn,
+#toggle-market-btn{
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: var(--radius-xs);
+  border: 1px solid transparent;
+  background: linear-gradient(180deg, var(--primary) 0%, var(--primary-600) 100%);
+  color:#fff;
+  font-weight: 600;
+  letter-spacing: .01em;
+  cursor: pointer;
+  transition: transform .06s ease, filter .18s ease, box-shadow .18s ease, background .18s ease;
+  box-shadow: 0 4px 10px rgba(10,132,255,.25);
+}
+
+button:hover,
+.update-rate-btn:hover,
+#toggle-market-btn:hover{
+  filter: brightness(1.02);
+  box-shadow: 0 6px 16px rgba(10,132,255,.30);
+}
+
+button:active,
+.update-rate-btn:active,
+#toggle-market-btn:active{
+  transform: translateY(1px);
+}
+
+button.secondary{
+  background: transparent;
+  color: var(--text);
+  border:1px solid var(--border);
+  box-shadow: none;
+}
+button.danger{
+  background: linear-gradient(180deg, var(--danger), #e02a22);
+  box-shadow: 0 4px 10px rgba(255,59,48,.25);
+}
+
+/* Helper buttons inside tables */
+.update-rate-btn{
+  padding: 8px 12px;
+  font-size: .9rem;
+}
+
+/* Table */
+#fluctuation-table{
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+#fluctuation-table thead th{
+  text-align: left;
+  font-size: .85rem;
+  font-weight: 700;
+  color: var(--muted);
+  padding: 12px 14px;
+  background: linear-gradient(180deg, rgba(0,0,0,.02), transparent);
+  border-bottom: 1px solid var(--border);
+}
+
+#fluctuation-table tbody td{
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+#fluctuation-table tbody tr:hover{
+  background: rgba(10,132,255,.06);
+}
+
+#fluctuation-table input.new-rate{
+  width: 110px;
+  text-align: right;
+}
+
+/* Small notes */
+p, .form-text{
+  color: var(--muted);
+}
+
+/* Links (if any inside) */
+a{
+  color: var(--primary);
+  text-decoration: none;
+}
+a:hover{ text-decoration: underline; }
+
+/* Utilities for the demo containers that were in your HTML */
+.container .p-5{
+  background: transparent;
+  border: 1px dashed var(--border);
+  color: var(--muted);
+  border-radius: var(--radius-xs);
+}
+
+/* Responsive tweaks */
+@media (max-width: 640px){
+  .card{ padding: 14px; }
+  #adminpanel-content{ padding: 0 14px; }
+  button, .update-rate-btn{ width: 100%; }
+}
+
+/* Focus-visible for keyboard users */
+:focus-visible{
+  outline: none;
+  box-shadow: 0 0 0 4px var(--ring);
+  border-color: var(--primary) !important;
+}
+
+/* Nice subtle separators for sections inside forms */
+.card form h4,
+.card form h5{
+  margin-top: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.admin-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:var(--gap);align-items:start}
+.admin-col{display:flex;flex-direction:column;gap:var(--gap)}
+@media (max-width:900px){.admin-grid{grid-template-columns:1fr}}

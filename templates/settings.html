@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}settings{% endblock %}
+{% block content %}
+
+
+  <h1 class="text-center mt-5 mb-4">Settings</h1>
+  
+
+
+
+
+
+<div class="row justify-content-center my-5">
+<div class="col-10 col-md-6 col-lg-4">
+<div class="d-grid gap-4">
+<button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#exampleModal">
+  Log Out
+</button>
+
+
+<button type="button" class="btn btn-dark"
+        onclick="window.location.href='{{ url_for('changepassword') }}'">
+  Change Password
+</button>
+
+
+
+
+<button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#timezoneModal">
+  Timezone
+</button>
+
+
+<button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#marketHoursModal">
+  Market Hours
+</button>
+
+<div class="d-flex justify-content-center my-2">
+ <div class="form-check form-switch">
+  <input class="form-check-input" type="checkbox" role="switch" id="switchCheckDefault">
+  <label class="form-check-label" for="switchCheckDefault">Toggle Light/Dark Theme</label>
+</div>
+
+
+
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Logging Out</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">No</button>
+        <a class="btn btn-success" href="{{ url_for('logout') }}">Yes</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="marketHoursModal" tabindex="-1" aria-labelledby="marketHoursLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="marketHoursLabel">Market Hours</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        {% if market %}
+          
+          <p class="mb-1"><strong>Opens:</strong>
+            {{ market.open_time.strftime('%H:%M') if market.open_time else 'Not set' }}
+          </p>
+          <p class="mb-1"><strong>Closes:</strong>
+            {{ market.close_time.strftime('%H:%M') if market.close_time else 'Not set' }}
+          </p>
+          <p class="mb-1"><strong>Holiday:</strong> {{ 'Yes' if market.is_holiday else 'No' }}</p>
+          <hr>
+          <p class="mb-0">Status:
+            {% if open_now %}
+              <span class="text-success fw-semibold">OPEN</span>
+            {% else %}
+              <span class="text-danger fw-semibold">CLOSED</span>
+            {% endif %}
+          </p>
+        
+        {% endif %}
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+<div class="modal fade" id="timezoneModal" tabindex="-1" aria-labelledby="timezoneLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="timezoneLabel">Timezone</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Mountain Standard Time
+      </div>
+      <div class="modal-footer">
+      
+        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
